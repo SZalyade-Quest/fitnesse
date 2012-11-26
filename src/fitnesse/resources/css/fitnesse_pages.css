@@ -170,3 +170,13 @@ tr.scenario-detail {
 	background-position: center top;
 	background-repeat: no-repeat;
 }
+
+#ACEditor { 
+    position: relative;
+    top: 1px;
+    right: 1px;
+    bottom: 0px;	
+    left: 1px;
+    height: 700px;
+    margin-bottom:20px;
+}
