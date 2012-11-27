@@ -7,8 +7,6 @@ function aceInit()
     if( $('#pageContent').length == 0 ) return;
     
     $('#editor').append($('<div id="ACEditor"/>'))
-    $('#pageContent').hide()
-    
     var editor = window.ACEditor = ace.edit("ACEditor");
     editor.setTheme("ace/theme/textmate");
     var session = editor.getSession();
@@ -38,7 +36,7 @@ function aceInit()
     appendModeSelector();
     overrideButtons();
     overrideEditorToggle();
-    toggleACEditor( $.cookie('wysiwyg') == 'textarea');
+    toggleACEditor( $.cookie('wysiwyg') != 'wysiwyg');
 }
 function appendModeSelector(){
     var editor = window.ACEditor;
