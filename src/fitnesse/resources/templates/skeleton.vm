@@ -37,6 +37,10 @@
    #parse( $headerTemplate )
   </header>
   
+  #if( $!errorNavTemplate )
+   #parse( $errorNavTemplate )
+  #end
+  
   <nav>
    #parse( $navTemplate )
   </nav>
@@ -45,9 +49,11 @@
    #parse( $mainTemplate )
   </article>
   
+  #if( $!footerTemplate )
   <footer>
    #parse( $footerTemplate )
   </footer>
-    
+  #end
+  
  </body>
 </html>

@@ -21,6 +21,15 @@ label input {
     margin-left: 145px; /* 140 + input field padding/border/margin */
 }
 
+/** Wiki pages (wiki, test, suite, report) **/
+.wikiPage td,
+.testPage td,
+.suitePage td,
+.testExecutionReport td,
+.compareHistory td {
+  white-space: pre-wrap;
+}
+
 /** Edit page **/
 .editPage #editor {
     margin-top: 8px;
@@ -120,6 +129,9 @@ label.checkbox {
 }
 
 /** Test history **/
+.testHistory td {
+    white-space: pre;
+}
 .testHistory td a {
 	text-decoration: none;
 }
@@ -139,6 +151,8 @@ tr.scenario-detail {
 }
 #test-summary, #progressBar {
 	padding: 0.5em;
+    padding-left: 1.5em;
+    background-position: 0 0.3em;
 }
 #test-summaries ul {
 	list-style: none;
@@ -146,6 +160,22 @@ tr.scenario-detail {
 }
 #test_summaries h2, #test-summaries h3 {
 	text-align: center;
+}
+#test-summaries .pass {
+  padding: 0px 0px 0px 20px;
+}
+#test-summary.pass,
+#test-summaries .pass {
+  background-image: url("../images/checkmark.png");
+  background-repeat: no-repeat;
+}
+#test-summaries .fail {
+  padding: 0px 0px 0px 20px;
+}
+#test-summary.fail,
+#test-summaries .fail {
+  background-image: url("../images/wrong.png");
+  background-repeat: no-repeat;
 }
 #test-action .stop {
 	background-color: red;
@@ -157,6 +187,40 @@ tr.scenario-detail {
 }
 .test_output_name h3 {
 	display: inline;
+}
+
+/** Suite overview */
+.overview_results table {
+    border: none;
+}
+.overview_bar {
+    border: 1px solid black;
+    height: 1.4em;
+    margin: 0 -0.5px;
+}
+.overview_part {
+    float: left;
+    height: 1.4em;
+    margin: 0;
+    padding: 0;
+}
+.unrun {
+    background-color: #FFF3B4;
+}
+
+.passed_tests, .unrun_tests, .failed_tests {
+    background-repeat: no-repeat;
+    margin: 0 4px;
+    padding-left: 22px;
+}
+.passed_tests {
+    background-image: url("../images/checkmark.png");
+}
+.unrun_tests {
+    background-image: url("../images/exception.png");
+}
+.failed_tests {
+    background-image: url("../images/wrong.png");
 }
 
 /** Virtual and import pages */
