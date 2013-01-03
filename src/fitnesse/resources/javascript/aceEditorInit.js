@@ -40,8 +40,13 @@ function aceInit()
 }
 function appendModeSelector(){
     var editor = window.ACEditor;
-    var modeSel = $('<label id="lmode"> Mode: </label><select id="mode" size="1"><option value="sql">SQL</option><option value="powershell">Powershell</option></select>')
-    $('#edit_buttons').append(modeSel);
+    var modeSel = $('<label id="lmode"> Mode: </label>'
+                        +'<select id="mode" size="1">'
+                        +'<option value="sql">SQL</option>'
+                        +'<option value="powershell">Powershell</option>'
+                        +'<option value="javascript">JavaScript</option>'
+                        +'<option value="python">Python</option></select>');
+    $('.textarea-toolbar').append(modeSel);
     
     $('#mode').change( function(evt){
         console.log("mode:", evt.target.value)
@@ -68,7 +73,7 @@ function overrideEditorToggle(){
     function last2first(handlers){  handlers.splice(0, 0, handlers.pop()); }
     last2first($('#editor-wysiwyg-1').data('events').click);
     
-    $('#editor-wrap-1').click(function() {
+    $('#tt-wrap-text').click(function() {
         window.ACEditor.getSession().setUseWrapMode(this.checked);
     });
 }
@@ -76,10 +81,11 @@ function overrideEditorToggle(){
 function toggleACEditor(bShow){
     if( bShow ){
         $('#ACEditor').show();
+        $('#wysiwyg').hide()
         $('#pageContent').hide()
     } else {
         $('#ACEditor').hide();
-        $('#pageContent').show()
+        $('#wysiwyg').show()
     }
 }
 
