@@ -40,13 +40,14 @@ function aceInit()
 }
 function appendModeSelector(){
     var editor = window.ACEditor;
-    var modeSel = $('<label id="lmode"> Mode: </label>'
+    var modeSel = $('<fieldset><label id="lmode"> Mode: </label>'
                         +'<select id="mode" size="1">'
                         +'<option value="sql">SQL</option>'
                         +'<option value="powershell">Powershell</option>'
                         +'<option value="javascript">JavaScript</option>'
-                        +'<option value="python">Python</option></select>');
-    $('.textarea-toolbar').append(modeSel);
+                        +'<option value="python">Python</option></select></fieldset>');
+    modeSel.insertBefore($('#editor'))
+    //$('.textarea-toolbar').append(modeSel);
     
     $('#mode').change( function(evt){
         console.log("mode:", evt.target.value)
