@@ -16,6 +16,10 @@ import fitnesse.responders.templateUtilities.HtmlPage;
 import fitnesse.responders.templateUtilities.PageTitle;
 import fitnesse.wiki.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class VersionResponder implements SecureResponder {
   private String version;
   private String resource;
@@ -50,9 +54,38 @@ public class VersionResponder implements SecureResponder {
     html.setNavTemplate("versionNav.vm");
     html.put("rollbackVersion", version);
     html.put("localPath", name);
+
+    List<VersionInfo> versions = new ArrayList<VersionInfo>(page.getData().getVersions());
+    Collections.sort(versions);
+    Collections.reverse(versions);
+    String nextVersion = selectNextVersion(versions, version);
+    html.put("nextVersion", nextVersion);
+    String previousVersion = selectPreviousVersion(versions, version);
+    html.put("previousVersion", previousVersion);
+
     html.setMainTemplate("wikiPage");
     html.put("content", new VersionRenderer(pageData));
     return html;
+  }
+
+  private String selectPreviousVersion(List<VersionInfo> versions, String current) {
+    int i = 0;
+    for (i=0; i<versions.size(); i++)
+      if (versions.get(i).getName().equals(current))
+        break;
+    if(i<0 || i>versions.size()-2)
+      return null;
+    return versions.get(i+1).getName();
+  }
+
+  private String selectNextVersion(List<VersionInfo> versions, String current) {
+    int i = 0;
+    for (; i<versions.size(); i++)
+      if (versions.get(i).getName().equals(current))
+        break;
+    if(i<1 || i>versions.size())
+      return null;
+    return versions.get(i-1).getName();
   }
 
   public SecureOperation getSecureOperation() {
