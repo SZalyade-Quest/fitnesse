@@ -9,9 +9,12 @@ import java.net.URLClassLoader;
 import java.lang.reflect.Method;
 
 public class FileUtil {
-  public static final String ENDL = System.getProperty("line.separator");
 
   public static File createFile(String path, String content) {
+    return createFile(path, new ByteArrayInputStream(content.getBytes()));
+  }
+
+  public static File createFile(String path, InputStream content) {
     String names[] = path.split("/");
     if (names.length == 1)
       return createFile(new File(path), content);
@@ -28,10 +31,23 @@ public class FileUtil {
   }
 
   public static File createFile(File file, String content) {
+    try {
+      return createFile(file, content.getBytes("UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+
+  public static File createFile(File file, byte[] bytes) {
+    return createFile(file, new ByteArrayInputStream(bytes));
+  }
+
+  public static File createFile(File file, InputStream content) {
     FileOutputStream fileOutput = null;
     try {
       fileOutput = new FileOutputStream(file);
-      fileOutput.write(content.getBytes());
+      FileUtil.copyBytes(content, fileOutput);
     }
     catch (IOException e) {
       throw new RuntimeException(e);
@@ -110,7 +126,7 @@ public class FileUtil {
   }
 
   public static String getFileContent(File input) throws IOException {
-    return new String(getFileBytes(input));
+    return new String(getFileBytes(input), "UTF-8");
   }
 
   public static byte[] getFileBytes(File input) throws IOException {
@@ -141,10 +157,6 @@ public class FileUtil {
     return lines;
   }
 
-  public static void writeLinesToFile(String filename, List<?> lines) throws FileNotFoundException {
-    writeLinesToFile(new File(filename), lines);
-  }
-
   public static void writeLinesToFile(File file, List<?> lines) throws FileNotFoundException {
     PrintStream output = new PrintStream(new FileOutputStream(file));
     for (Iterator<?> iterator = lines.iterator(); iterator.hasNext();) {
@@ -159,6 +171,11 @@ public class FileUtil {
     while (!reader.isEof())
       output.write(reader.readBytes(1000));
   }
+
+  public static String toString(InputStream input) throws IOException {
+    Scanner s = new Scanner(input, "UTF-8").useDelimiter("\\A");
+    return s.hasNext() ? s.next() : "";
+   }
 
   public static File createDir(String path) {
     makeDir(path);

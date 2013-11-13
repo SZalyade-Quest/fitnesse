@@ -23,7 +23,7 @@ public class TypeAdapter {
   public Method method;
   public Class<?> type;
   public boolean isRegex;
-  private static Map<Class<?>, TypeAdapter> PARSE_DELEGATES = new HashMap<Class<?>, TypeAdapter>();
+  private static final Map<Class<?>, TypeAdapter> PARSE_DELEGATES = new HashMap<Class<?>, TypeAdapter>();
   // Factory //////////////////////////////////
 
   public static TypeAdapter on(Fixture target, Class<?> type) {
@@ -118,9 +118,10 @@ public class TypeAdapter {
   public boolean equals(Object a, Object b) {
     boolean isEqual = false;
 
-    if (isRegex)
-      isEqual = Pattern.matches(a.toString(), b.toString());
-    else {
+    if (isRegex) {
+      if (b != null)
+        isEqual = Pattern.matches(a.toString(), b.toString());
+    } else {
       if (a == null)
         isEqual = (b == null);
       else

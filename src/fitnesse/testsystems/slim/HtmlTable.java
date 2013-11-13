@@ -5,10 +5,13 @@ package fitnesse.testsystems.slim;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
+import fitnesse.testsystems.ExceptionResult;
 import fitnesse.testsystems.ExecutionResult;
-import fitnesse.testsystems.slim.results.ExceptionResult;
-import fitnesse.testsystems.slim.results.TestResult;
+import fitnesse.testsystems.TestResult;
+import fitnesse.testsystems.slim.results.SlimExceptionResult;
+import fitnesse.testsystems.slim.results.SlimTestResult;
 import fitnesse.testsystems.slim.tables.SyntaxError;
 import fitnesse.wikitext.Utils;
 import org.htmlparser.Node;
@@ -22,6 +25,12 @@ import org.htmlparser.tags.TableTag;
 import org.htmlparser.util.NodeList;
 
 public class HtmlTable implements Table {
+  // Source: http://dev.w3.org/html5/markup/common-models.html
+  private final static Pattern HTML_PATTERN = Pattern.compile("^<(p|hr|pre|ul|ol|dl|div|h[1-6]|hgroup|address|" +
+          "blockquote|ins|del|object|map||video|audio|figure|table|fieldset|canvas|a|em|strong|small|mark|" +
+          "abbr|dfn|i|b|s|u|code|var|samp|kbd|sup|sub|q|cite|span|br|ins|del|img|embed|object|video|audio|label|" +
+          "output|datalist|progress|command|canvas|time|meter)([ >].*</\\1>|[^>]*/>)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
   private List<Row> rows = new ArrayList<Row>();
   private TableTag tableNode;
 
@@ -44,10 +53,6 @@ public class HtmlTable implements Table {
     return rows.get(rowIndex).getColumn(columnIndex).getContent();
   }
 
-  public String getUnescapedCellContents(int col, int row) {
-    return Utils.unescapeHTML(getCellContents(col, row));
-  }
-
   public int getRowCount() {
     return rows.size();
   }
@@ -58,8 +63,7 @@ public class HtmlTable implements Table {
 
   public void substitute(int col, int row, String contents) {
     Cell cell = rows.get(row).getColumn(col);
-    // TODO: need escaping here?
-    cell.setContent(Utils.escapeHTML(contents));
+    cell.setContent(contents);
   }
 
   public List<List<String>> asList() {
@@ -82,13 +86,13 @@ public class HtmlTable implements Table {
     rows.add(row);
     tableNode.getChildren().add(row.getRowNode());
     for (String s : list)
-      row.appendCell(s == null ? "" : Utils.escapeHTML(s));
+      row.appendCell(s == null ? "" : asHtml(s));
     return rows.size() - 1;
   }
 
   public void addColumnToRow(int rowIndex, String contents) {
     Row row = rows.get(rowIndex);
-    row.appendCell(Utils.escapeHTML(contents));
+    row.appendCell(asHtml(contents));
   }
 
   /**
@@ -155,14 +159,16 @@ public class HtmlTable implements Table {
   }
 
   @Override
-  public void updateContent(int col, int row, TestResult testResult) {
+  public void updateContent(int col, int row, SlimTestResult testResult) {
     Cell cell = rows.get(row).getColumn(col);
     cell.setTestResult(testResult);
-    cell.setContent(cell.formatTestResult());
+    final String newContent = cell.formatTestResult();
+    if (newContent != null)
+      cell.setContent(newContent);
   }
 
   @Override
-  public void updateContent(int colIndex, int rowIndex, ExceptionResult exceptionResult) {
+  public void updateContent(int colIndex, int rowIndex, SlimExceptionResult exceptionResult) {
     Row row = rows.get(rowIndex);
     Cell cell = row.getColumn(colIndex);
     if (exceptionResult.hasMessage()) {
@@ -260,12 +266,12 @@ public class HtmlTable implements Table {
   class Cell {
     private final TableColumn columnNode;
     private final String originalContent;
-    private TestResult testResult;
+    private SlimTestResult testResult;
     private ExceptionResult exceptionResult;
 
     public Cell(TableColumn tableColumn) {
       columnNode = tableColumn;
-      originalContent = Utils.unescapeHTML(columnNode.getChildrenHTML());
+      originalContent = columnNode.getChildrenHTML();
     }
 
     public Cell(String contents) {
@@ -279,17 +285,15 @@ public class HtmlTable implements Table {
     }
 
     public String getContent() {
-      return Utils.unescapeHTML(getEscapedContent());
-    }
-
-    public String getEscapedContent() {
       String unescaped = columnNode.getChildrenHTML();
       //Some browsers need &nbsp; inside an empty table cell, so we remove it here.
-      return "&nbsp;".equals(unescaped) ? "" : unescaped;
+      if ("&nbsp;".equals(unescaped)) {
+        return "";
+      }
+      return qualifiesAsHtml(unescaped) ? unescaped : Utils.unescapeHTML(unescaped);
     }
 
     private void setContent(String s) {
-      // No HTML escaping here.
       TextNode textNode = new TextNode(s);
       NodeList nodeList = new NodeList(textNode);
       columnNode.setChildren(nodeList);
@@ -303,7 +307,7 @@ public class HtmlTable implements Table {
       return columnNode;
     }
 
-    public void setTestResult(TestResult testResult) {
+    public void setTestResult(SlimTestResult testResult) {
       this.testResult = testResult;
     }
 
@@ -313,46 +317,57 @@ public class HtmlTable implements Table {
         setContent(String.format("%s <span class=\"%s\">%s</span>",
                 originalContent,
                 exceptionResult.getExecutionResult().toString(),
-                Utils.escapeHTML(exceptionResult.getMessage())));
-
+                asHtml(exceptionResult.getMessage())));
       }
     }
 
     public String formatTestResult() {
       if (testResult.getExecutionResult() == null) {
-        return testResult.getMessage() != null ? Utils.escapeHTML(testResult.getMessage()) : originalContent;
+        return testResult.getMessage() != null ? asHtml(testResult.getMessage()) : null;
       }
-      final String escapedMessage = testResult.hasMessage() ? Utils.escapeHTML(testResult.getMessage()) : originalContent;
+      final String message = testResult.hasMessage()
+              ? asHtml(testResult.getMessage())
+              : originalContent;
       switch (testResult.getExecutionResult()) {
         case PASS:
-          return String.format("<span class=\"pass\">%s</span>", escapedMessage);
+          return String.format("<span class=\"pass\">%s</span>", message);
         case FAIL:
           if (testResult.hasActual() && testResult.hasExpected()) {
             return String.format("[%s] <span class=\"fail\">expected [%s]</span>",
-                    Utils.escapeHTML(testResult.getActual()),
-                    Utils.escapeHTML(testResult.getExpected()));
+                    asHtml(testResult.getActual()),
+                    asHtml(testResult.getExpected()));
           } else if ((testResult.hasActual() || testResult.hasExpected()) && testResult.hasMessage()) {
             return String.format("[%s] <span class=\"fail\">%s</span>",
-                    Utils.escapeHTML(testResult.hasActual() ? testResult.getActual() : testResult.getExpected()),
-                    Utils.escapeHTML(testResult.getMessage()));
+                    asHtml(testResult.hasActual() ? testResult.getActual() : testResult.getExpected()),
+                    message);
           }
-          return String.format("<span class=\"fail\">%s</span>", escapedMessage);
+          return String.format("<span class=\"fail\">%s</span>", message);
         case IGNORE:
-          return String.format("%s <span class=\"ignore\">%s</span>", originalContent, escapedMessage);
+          return String.format("%s <span class=\"ignore\">%s</span>", originalContent, message);
         case ERROR:
-          return String.format("%s <span class=\"error\">%s</span>", originalContent, escapedMessage);
+          return String.format("%s <span class=\"error\">%s</span>", originalContent, message);
       }
       return "Should not be here";
     }
+  }
+
+  private String asHtml(String text) {
+    return qualifiesAsHtml(text) ? text : Utils.escapeHTML(text);
   }
 
   @Override
   public HtmlTable asTemplate(CellContentSubstitution substitution) throws SyntaxError {
     String script = this.toHtml();
     // Quick 'n' Dirty
-    script = substitution.substitute(0, 0, script);
+    script = substitution.substitute(script);
     return new HtmlTableScanner(script).getTable(0);
   }
+
+  static boolean qualifiesAsHtml(String text) {
+    // performance improvement: First check 1st character.
+    return text.startsWith("<") && HTML_PATTERN.matcher(text).matches();
+  }
+
 }
 
 

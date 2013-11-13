@@ -14,7 +14,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 
 public class XmlUtil {
-  private static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+  private static final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 
   public static DocumentBuilder getDocumentBuilder() {
     try {
@@ -40,7 +40,7 @@ public class XmlUtil {
     try {
       return getDocumentBuilder().parse(new InputSource(new InputStreamReader(new FileInputStream(input), "UTF-8")));
     } catch (SAXParseException e) {
-      throw new SAXException(String.format("SAXParseException at line:%d, col:%d, %s", e.getLineNumber(), e.getColumnNumber(), e.getMessage()));
+      throw new SAXException(String.format("SAXParseException at %s:%d,%d: %s", input.getCanonicalPath(), e.getLineNumber(), e.getColumnNumber(), e.getMessage()));
     }
   }
 

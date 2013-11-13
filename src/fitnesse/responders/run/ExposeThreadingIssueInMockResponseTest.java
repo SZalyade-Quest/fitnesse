@@ -5,7 +5,10 @@ package fitnesse.responders.run;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
+import fitnesse.testsystems.fit.FitTestSystem;
+import fitnesse.testsystems.fit.SocketDealer;
+import fitnesse.wiki.WikiPageUtil;
+import org.junit.Assert;
 
 import org.junit.After;
 import org.junit.Before;
@@ -17,8 +20,7 @@ import fitnesse.http.MockResponseSender;
 import fitnesse.http.Response;
 import fitnesse.testsystems.fit.FitSocketReceiver;
 import fitnesse.testutil.FitNesseUtil;
-import fitnesse.wiki.InMemoryPage;
-import fitnesse.wiki.PageCrawler;
+import fitnesse.wiki.mem.InMemoryPage;
 import fitnesse.wiki.PathParser;
 import fitnesse.wiki.WikiPage;
 
@@ -27,24 +29,18 @@ public class ExposeThreadingIssueInMockResponseTest {
   private MockRequest request;
   private TestResponder responder;
   private FitNesseContext context;
-  private Response response;
-  private MockResponseSender sender;
-  private WikiPage testPage;
   private String results;
-  private PageCrawler crawler;
-  private String simpleRunPageName;
-  private final int port = 9123;
   private FitSocketReceiver receiver;
 
   @Before
   public void setUp() throws Exception {
     root = InMemoryPage.makeRoot("RooT");
-    crawler = root.getPageCrawler();
     request = new MockRequest();
     responder = new TestResponder();
+    int port = 9123;
     context = FitNesseUtil.makeTestContext(root, port);
 
-    receiver = new FitSocketReceiver(port, context.socketDealer);
+    receiver = new FitSocketReceiver(port, FitTestSystem.socketDealer());
     receiver.receiveSocket();
   }
 
@@ -72,12 +68,12 @@ public class ExposeThreadingIssueInMockResponseTest {
   }
 
   private void doSimpleRun(String fixtureTable) throws Exception {
-    simpleRunPageName = "TestPage";
-    testPage = crawler.addPage(root, PathParser.parse(simpleRunPageName), classpathWidgets() + fixtureTable);
+    String simpleRunPageName = "TestPage";
+    WikiPage testPage = WikiPageUtil.addPage(root, PathParser.parse(simpleRunPageName), classpathWidgets() + fixtureTable);
     request.setResource(testPage.getName());
 
-    response = responder.makeResponse(context, request);
-    sender = new MockResponseSender();
+    Response response = responder.makeResponse(context, request);
+    MockResponseSender sender = new MockResponseSender();
     sender.doSending(response);
 
     results = sender.sentData();

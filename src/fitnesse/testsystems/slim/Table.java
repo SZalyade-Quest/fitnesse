@@ -2,16 +2,15 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.testsystems.slim;
 
-import fitnesse.testsystems.slim.results.ExceptionResult;
-import fitnesse.testsystems.slim.results.TestResult;
-import fitnesse.testsystems.slim.tables.SyntaxError;
-
 import java.util.List;
+
+import fitnesse.testsystems.TestResult;
+import fitnesse.testsystems.slim.results.SlimExceptionResult;
+import fitnesse.testsystems.slim.results.SlimTestResult;
+import fitnesse.testsystems.slim.tables.SyntaxError;
 
 public interface Table {
   String getCellContents(int col, int row);
-  // FixMe: -AJM- Can I remove this without functional change???
-  String getUnescapedCellContents(int col, int row);
 
   int getRowCount();
 
@@ -27,16 +26,16 @@ public interface Table {
 
   void updateContent(int row, TestResult testResult);
 
-  void updateContent(int col, int row, TestResult testResult);
+  void updateContent(int col, int row, SlimTestResult testResult);
 
-  void updateContent(int col, int row, ExceptionResult exceptionResult);
+  void updateContent(int col, int row, SlimExceptionResult exceptionResult);
 
-  public Table asTemplate(CellContentSubstitution substitution) throws SyntaxError;
+  Table asTemplate(CellContentSubstitution substitution) throws SyntaxError;
 
   // Mainly for IDE navigation
-  public String toString();
+  String toString();
 
   interface CellContentSubstitution {
-    String substitute(int col, int row, String content) throws SyntaxError;
+    String substitute(String content) throws SyntaxError;
   }
 }

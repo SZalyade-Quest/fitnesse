@@ -1,17 +1,17 @@
 package fitnesse.testsystems.slim.tables;
 
-import static org.junit.Assert.assertEquals;
-import static util.ListUtility.list;
-
 import java.util.List;
 
 import fitnesse.slim.instructions.MakeInstruction;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static util.ListUtility.list;
+
 public class LibraryTableTest extends SlimTableTestSupport<LibraryTable> {
-  private String tableHeader = "|Library|\n";
 
   private void buildInstructionsFor(String scriptStatements) throws Exception {
+    String tableHeader = "|Library|\n";
     makeSlimTableAndBuildInstructions(tableHeader + scriptStatements);
   }
 

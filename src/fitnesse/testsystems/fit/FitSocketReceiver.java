@@ -6,11 +6,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-import fitnesse.components.SocketDealer;
+import fitnesse.socketservice.SocketFactory;
+
 import fitnesse.http.Request;
 
 public class FitSocketReceiver {
-  public static int DEFAULT_SOCKET = 9123;
+  public static final int DEFAULT_SOCKET = 9123;
 
   public ServerSocket serverSocket;
   public Socket socket;
@@ -23,7 +24,7 @@ public class FitSocketReceiver {
   }
 
   public int receiveSocket() throws Exception {
-    serverSocket = new ServerSocket(port);
+    serverSocket = SocketFactory.tryCreateServerSocket(port);
     port = serverSocket.getLocalPort();
     new Thread() {
       public void run() {

@@ -2,11 +2,6 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.testsystems.slim.tables;
 
-import static fitnesse.testsystems.slim.tables.ComparatorUtil.approximatelyEqual;
-import static java.lang.Character.isLetterOrDigit;
-import static java.lang.Character.toUpperCase;
-import static util.ListUtility.list;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,10 +13,19 @@ import fitnesse.slim.instructions.CallInstruction;
 import fitnesse.slim.instructions.Instruction;
 import fitnesse.slim.instructions.MakeInstruction;
 import fitnesse.testsystems.ExecutionResult;
+import fitnesse.testsystems.TableCell;
+import fitnesse.testsystems.TestResult;
+import fitnesse.testsystems.slim.CustomComparator;
+import fitnesse.testsystems.slim.CustomComparatorRegistry;
 import fitnesse.testsystems.slim.SlimTestContext;
 import fitnesse.testsystems.slim.Table;
-import fitnesse.testsystems.slim.results.ExceptionResult;
-import fitnesse.testsystems.slim.results.TestResult;
+import fitnesse.testsystems.slim.results.SlimExceptionResult;
+import fitnesse.testsystems.slim.results.SlimTestResult;
+
+import static fitnesse.testsystems.slim.tables.ComparatorUtil.approximatelyEqual;
+import static java.lang.Character.isLetterOrDigit;
+import static java.lang.Character.toUpperCase;
+import static util.ListUtility.list;
 
 public abstract class SlimTable {
   private static final Pattern SYMBOL_ASSIGNMENT_PATTERN = Pattern.compile("\\A\\s*\\$(\\w+)\\s*=\\s*\\Z");
@@ -57,7 +61,6 @@ public abstract class SlimTable {
 
     Table parentTable = getTable();
     Table childTable = slimtable.getTable();
-    //childTable.setName(slimtable.tableName);
     parentTable.appendChildTable(row, childTable);
   }
 
@@ -72,7 +75,7 @@ public abstract class SlimTable {
 
   protected abstract String getTableType();
 
-  public abstract List<Assertion> getAssertions() throws SyntaxError;
+  public abstract List<SlimAssertion> getAssertions() throws SyntaxError;
 
   protected String makeInstructionTag() {
     return makeInstructionTag(instructionNumber++);
@@ -98,7 +101,7 @@ public abstract class SlimTable {
     return table;
   }
 
-  protected Assertion constructFixture(String fixtureName) {
+  protected SlimAssertion constructFixture(String fixtureName) {
     return constructInstance(getTableName(), fixtureName, 0, 0);
   }
 
@@ -115,21 +118,21 @@ public abstract class SlimTable {
     return tableHeader.split(":")[1];
   }
 
-  protected Assertion constructInstance(String instanceName, String className, int classNameColumn, int row) {
+  protected SlimAssertion constructInstance(String instanceName, String className, int classNameColumn, int row) {
     RowExpectation expectation = new ConstructionExpectation(classNameColumn, row);
     return makeAssertion(new MakeInstruction(makeInstructionTag(), instanceName, className, gatherConstructorArgumentsStartingAt(classNameColumn + 1, row)),
             expectation);
   }
 
-  protected final Assertion makeAssertion(Instruction instruction, Expectation expectation) {
-    return new Assertion(instruction, expectation);
+  protected final SlimAssertion makeAssertion(Instruction instruction, SlimExpectation expectation) {
+    return new SlimAssertion(instruction, expectation);
   }
 
   protected Object[] gatherConstructorArgumentsStartingAt(int startingColumn, int row) {
     int columnCount = table.getColumnCountInRow(row);
     List<String> arguments = new ArrayList<String>();
     for (int col = startingColumn; col < columnCount; col++) {
-      arguments.add(table.getUnescapedCellContents(col, row));
+      arguments.add(table.getCellContents(col, row));
     }
     return arguments.toArray(new String[arguments.size()]);
   }
@@ -140,11 +143,6 @@ public abstract class SlimTable {
 
   protected Instruction callAndAssign(String symbolName, String instanceName, String functionName, String... args) {
     return new CallAndAssignInstruction(makeInstructionTag(), symbolName, instanceName, Disgracer.disgraceMethodName(functionName), args);
-  }
-
-  @Deprecated
-  public boolean shouldIgnoreException(String resultKey, String resultString) {
-    return false;
   }
 
   protected String ifSymbolAssignment(int col, int row) {
@@ -266,8 +264,8 @@ public abstract class SlimTable {
     }
   }
 
-  /** Expectation base class for row based expectations. */
-  public abstract class RowExpectation implements Expectation {
+  /** SlimExpectation base class for row based expectations. */
+  public abstract class RowExpectation implements SlimExpectation, TableCell {
     private final int col;
     private final int row;
     private final String originalContent;
@@ -282,14 +280,11 @@ public abstract class SlimTable {
       this.originalContent = originalContent;
     }
 
-    /* (non-Javadoc)
-     * @see fitnesse.testsystems.slim.tables.Expectation#evaluateExpectation(java.util.Map)
-     */
     @Override
     public TestResult evaluateExpectation(Object returnValue) {
-      TestResult testResult;
+      SlimTestResult testResult;
       if (returnValue == null) {
-        testResult = TestResult.ignore("Test not run");
+        testResult = SlimTestResult.ignore("Test not run");
       } else {
         String value;
         value = returnValue.toString();
@@ -303,14 +298,14 @@ public abstract class SlimTable {
       return testResult;
     }
 
-    TestResult evaluationMessage(String actual, String expected) {
+    SlimTestResult evaluationMessage(String actual, String expected) {
       return createEvaluationMessage(actual, expected);
     }
 
-    protected abstract TestResult createEvaluationMessage(String actual, String expected);
+    protected abstract SlimTestResult createEvaluationMessage(String actual, String expected);
 
     @Override
-    public ExceptionResult evaluateException(ExceptionResult exceptionResult) {
+    public SlimExceptionResult evaluateException(SlimExceptionResult exceptionResult) {
       table.updateContent(col, row, exceptionResult);
       getTestContext().incrementErroredTestsCount();
       return exceptionResult;
@@ -404,12 +399,13 @@ public abstract class SlimTable {
     }
 
     @Override
-    protected TestResult createEvaluationMessage(String actual, String expected) {
-      return TestResult.plain(replaceSymbolsWithFullExpansion(expected));
+    protected SlimTestResult createEvaluationMessage(String actual, String expected) {
+      table.substitute(getCol(), getRow(), replaceSymbolsWithFullExpansion(expected));
+      return SlimTestResult.plain();
     }
   }
 
-  class SilentReturnExpectation implements Expectation {
+  class SilentReturnExpectation implements SlimExpectation {
     private final int col;
     private final int row;
 
@@ -424,8 +420,8 @@ public abstract class SlimTable {
     }
 
     @Override
-    public ExceptionResult evaluateException(ExceptionResult exceptionResult) {
-      if (exceptionResult.isNoMethodInClassException()) {
+    public SlimExceptionResult evaluateException(SlimExceptionResult exceptionResult) {
+      if (exceptionResult.isNoMethodInClassException() || exceptionResult.isNoInstanceException()) {
         return null;
       }
       table.updateContent(col, row, exceptionResult);
@@ -440,11 +436,11 @@ public abstract class SlimTable {
     }
 
     @Override
-    protected TestResult createEvaluationMessage(String actual, String expected) {
+    protected SlimTestResult createEvaluationMessage(String actual, String expected) {
       if ("OK".equalsIgnoreCase(actual))
-        return TestResult.ok(replaceSymbolsWithFullExpansion(expected));
+        return SlimTestResult.ok(replaceSymbolsWithFullExpansion(expected));
       else
-        return TestResult.error("Unknown construction message", actual);
+        return SlimTestResult.error("Unknown construction message", actual);
     }
   }
 
@@ -456,34 +452,33 @@ public abstract class SlimTable {
       this.symbolName = symbolName;
     }
 
-    // TODO: make something useful for substitution
     @Override
-    protected TestResult createEvaluationMessage(String actual, String expected) {
+    protected SlimTestResult createEvaluationMessage(String actual, String expected) {
       setSymbol(symbolName, actual);
-      return TestResult.plain(String.format("$%s<-[%s]", symbolName, actual));
+      return SlimTestResult.plain(String.format("$%s<-[%s]", symbolName, actual));
     }
   }
 
   class ReturnedValueExpectation extends RowExpectation {
     public ReturnedValueExpectation(int col, int row) {
-      super(col, row, table.getUnescapedCellContents(col, row));
+      super(col, row, table.getCellContents(col, row));
     }
 
     @Override
-    protected TestResult createEvaluationMessage(String actual, String expected) {
-      TestResult testResult;
+    protected SlimTestResult createEvaluationMessage(String actual, String expected) {
+      SlimTestResult testResult;
       String replacedExpected = replaceSymbols(expected);
 
       if (actual == null)
-        testResult = TestResult.fail("null", replacedExpected); //todo can't be right message.
+        testResult = SlimTestResult.fail("null", replacedExpected); //todo can't be right message.
       else if (actual.equals(replacedExpected))
-        testResult = TestResult.pass(announceBlank(replaceSymbolsWithFullExpansion(expected)));
+        testResult = SlimTestResult.pass(announceBlank(replaceSymbolsWithFullExpansion(expected)));
       else if (replacedExpected.length() == 0)
-        testResult = TestResult.ignore(actual);
+        testResult = SlimTestResult.ignore(actual);
       else {
         testResult = new Comparator(replacedExpected, actual, expected).evaluate();
         if (testResult == null)
-          testResult = TestResult.fail(actual, replaceSymbolsWithFullExpansion(expected));
+          testResult = SlimTestResult.fail(actual, replaceSymbolsWithFullExpansion(expected));
       }
 
       return testResult;
@@ -501,8 +496,8 @@ public abstract class SlimTable {
     }
 
     @Override
-    protected TestResult createEvaluationMessage(String actual, String expected) {
-      TestResult testResult = super.createEvaluationMessage(actual, expected);
+    protected SlimTestResult createEvaluationMessage(String actual, String expected) {
+      SlimTestResult testResult = super.createEvaluationMessage(actual, expected);
       if (testResult != null)
         return testResult.negateTestResult();
       return null;
@@ -521,6 +516,7 @@ public abstract class SlimTable {
     );
 
     private Pattern regexPattern = Pattern.compile("\\s*=~/(.*)/");
+    private Pattern customComparatorPattern = Pattern.compile("\\s*(\\w*):(.*)");
     private double v;
     private double arg1;
     private double arg2;
@@ -544,8 +540,12 @@ public abstract class SlimTable {
       return testResult != null && testResult.getExecutionResult() == ExecutionResult.PASS;
     }
 
-    public TestResult evaluate() {
-      TestResult message = evaluateRegularExpressionIfPresent();
+    public SlimTestResult evaluate() {
+      SlimTestResult message = evaluateRegularExpressionIfPresent();
+      if (message != null)
+        return message;
+
+      message = evaluateCustomComparatorIfPresent();
       if (message != null)
         return message;
 
@@ -560,9 +560,31 @@ public abstract class SlimTable {
         return null;
     }
 
-    private TestResult evaluateRegularExpressionIfPresent() {
+    private SlimTestResult evaluateCustomComparatorIfPresent() {
+      SlimTestResult message = null;
+      Matcher customComparatorMatcher = customComparatorPattern.matcher(expression);
+      if (customComparatorMatcher.matches()) {
+        String prefix = customComparatorMatcher.group(1);
+        CustomComparator customComparator = CustomComparatorRegistry.getCustomComparatorForPrefix(prefix);
+        if (customComparator != null) {
+          String expectedString = customComparatorMatcher.group(2);
+          try {
+            if (customComparator.matches(actual, expectedString)) {
+              message = SlimTestResult.pass(expectedString + " matches " + actual);
+            } else {
+              message = SlimTestResult.fail(expectedString + " doesn't match " + actual);
+            }
+          } catch (Throwable t) {
+            message = SlimTestResult.fail(expectedString + " doesn't match " + actual + ":\n" + t.getMessage());
+          }
+        }
+      }
+      return message;
+    }
+
+    private SlimTestResult evaluateRegularExpressionIfPresent() {
       Matcher regexMatcher = regexPattern.matcher(expression);
-      TestResult message = null;
+      SlimTestResult message = null;
       if (regexMatcher.matches()) {
         String pattern = regexMatcher.group(1);
         message = evaluateRegularExpression(pattern);
@@ -570,29 +592,29 @@ public abstract class SlimTable {
       return message;
     }
 
-    private TestResult evaluateRegularExpression(String pattern) {
-      TestResult message;
+    private SlimTestResult evaluateRegularExpression(String pattern) {
+      SlimTestResult message;
       Matcher patternMatcher = Pattern.compile(pattern).matcher(actual);
       if (patternMatcher.find()) {
-        message = TestResult.pass(String.format("/%s/ found in: %s", pattern, actual));
+        message = SlimTestResult.pass(String.format("/%s/ found in: %s", pattern, actual));
       } else {
-        message = TestResult.fail(String.format("/%s/ not found in: %s", pattern, actual));
+        message = SlimTestResult.fail(String.format("/%s/ not found in: %s", pattern, actual));
       }
       return message;
     }
 
-    private TestResult doRange(Matcher matcher) {
+    private SlimTestResult doRange(Matcher matcher) {
       boolean closedLeft = matcher.group(2).equals("=");
       boolean closedRight = matcher.group(3).equals("=");
       boolean pass = (arg1 < v && v < arg2) || (closedLeft && arg1 == v) || (closedRight && arg2 == v);
       return rangeMessage(pass);
     }
 
-    private TestResult rangeMessage(boolean pass) {
+    private SlimTestResult rangeMessage(boolean pass) {
       String[] fragments = expected.replaceAll(" ", "").split("_");
       String message = String.format("%s%s%s", fragments[0], actual, fragments[1]);
       message = replaceSymbolsWithFullExpansion(message);
-      return pass ? TestResult.pass(message) : TestResult.fail(message);
+      return pass ? SlimTestResult.pass(message) : SlimTestResult.fail(message);
     }
 
     private boolean canUnpackRange(Matcher matcher) {
@@ -606,7 +628,7 @@ public abstract class SlimTable {
       return true;
     }
 
-    private TestResult doSimpleComparison() {
+    private SlimTestResult doSimpleComparison() {
       if (operation.equals("<") || operation.equals("!>="))
         return simpleComparisonMessage(v < arg1);
       else if (operation.equals(">") || operation.equals("!<="))
@@ -627,10 +649,10 @@ public abstract class SlimTable {
         return null;
     }
 
-    private TestResult simpleComparisonMessage(boolean pass) {
+    private SlimTestResult simpleComparisonMessage(boolean pass) {
       String message = String.format("%s%s", actual, expected.replaceAll(" ", ""));
       message = replaceSymbolsWithFullExpansion(message);
-      return pass ? TestResult.pass(message) : TestResult.fail(message);
+      return pass ? SlimTestResult.pass(message) : SlimTestResult.fail(message);
 
     }
 

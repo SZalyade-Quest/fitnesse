@@ -42,7 +42,7 @@ public class ResponseTest {
     checkPhrase(414, "Request-URI Too Large");
     checkPhrase(415, "Unsupported Media Type");
     checkPhrase(416, "Requested range not satisfiable");
-    checkPhrase(417, "Expectation Failed");
+    checkPhrase(417, "SlimExpectation Failed");
     checkPhrase(500, "Internal Server Error");
     checkPhrase(501, "Not Implemented");
     checkPhrase(502, "Bad Gateway");
@@ -96,21 +96,18 @@ public class ResponseTest {
   @Test
   public void shouldNotHaveHeadersIfText() throws Exception {
     Response response = new MockResponse("text");
-    response.addStandardHeaders();
     assertEquals("", response.makeHttpHeaders());
   }
 
   @Test
   public void shouldHaveHeadersIfHtml() throws Exception {
     Response response = new MockResponse("html");
-    response.addStandardHeaders();
     assertTrue(response.makeHttpHeaders().contains("HTTP/1.1 200 OK"));
   }
 
   @Test
   public void shouldHaveHeadersIfXml() throws Exception {
     Response response = new MockResponse("xml");
-    response.addStandardHeaders();
     assertTrue(response.makeHttpHeaders().contains("HTTP/1.1 200 OK"));
   }
 }

@@ -8,8 +8,8 @@ import fitnesse.authentication.SecureWriteOperation;
 import fitnesse.components.TraversalListener;
 import fitnesse.components.Traverser;
 import fitnesse.http.ChunkedResponse;
-import fitnesse.responders.templateUtilities.HtmlPage;
-import fitnesse.responders.templateUtilities.PageTitle;
+import fitnesse.html.template.HtmlPage;
+import fitnesse.html.template.PageTitle;
 import fitnesse.wiki.PageCrawler;
 import fitnesse.wiki.PageData;
 import fitnesse.wiki.PathParser;
@@ -23,6 +23,15 @@ public class WikiImportingResponder extends ChunkingResponder implements SecureR
 
   private WikiImporter importer = new WikiImporter();
   private TraversalListener<Object> traversalListener;
+
+  public static void handleImportProperties(HtmlPage html, WikiPage page) {
+    PageData pageData = page.getData();
+    if (WikiImportProperty.isImported(pageData)) {
+      html.setBodyClass("imported");
+      WikiImportProperty importProperty = WikiImportProperty.createFrom(pageData.getProperties());
+      html.put("sourceUrl", importProperty.getSourceUrl());
+    }
+  }
 
   public void setImporter(WikiImporter importer) {
     this.importer = importer;

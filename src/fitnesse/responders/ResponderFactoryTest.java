@@ -20,8 +20,7 @@ import fitnesse.responders.testHistory.TestHistoryResponder;
 import fitnesse.responders.versions.RollbackResponder;
 import fitnesse.responders.versions.VersionResponder;
 import fitnesse.responders.versions.VersionSelectionResponder;
-import fitnesse.wiki.InMemoryPage;
-import fitnesse.wiki.PageCrawler;
+import fitnesse.wiki.mem.InMemoryPage;
 import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPageDummy;
 import org.junit.Before;
@@ -37,14 +36,12 @@ public class ResponderFactoryTest {
   private MockRequest request;
   private WikiPageDummy nonExistantPage;
   private WikiPage root;
-  private PageCrawler crawler;
 
   @Before
   public void setUp() throws Exception {
     factory = new ResponderFactory("testDir");
     request = new MockRequest();
     root = InMemoryPage.makeRoot("root");
-    crawler = root.getPageCrawler();
     nonExistantPage = new WikiPageDummy();
   }
 
@@ -64,11 +61,11 @@ public class ResponderFactoryTest {
   @Test
   public void testWikiPageResponder() throws Exception {
     request.setResource("SomePage");
-    assertResponderType(WikiPageResponder.class, root);
+    assertResponderType(WikiPageResponder.class);
     request.setResource("");
-    assertResponderType(WikiPageResponder.class, root);
+    assertResponderType(WikiPageResponder.class);
     request.setResource("root");
-    assertResponderType(WikiPageResponder.class, root);
+    assertResponderType(WikiPageResponder.class);
   }
 
   @Test
@@ -90,15 +87,15 @@ public class ResponderFactoryTest {
   public void testEditResponder() throws Exception {
     request.addInput("responder", "edit");
     request.setResource("SomePage");
-    assertResponderType(EditResponder.class, root);
-    assertResponderType(EditResponder.class, nonExistantPage);
+    assertResponderType(EditResponder.class);
+    assertResponderType(EditResponder.class);
   }
 
   @Test
   public void testPageDataResponder() throws Exception {
     request.addInput("responder", "pageData");
     request.setResource("SomePage");
-    assertResponderType(PageDataWikiPageResponder.class, root);
+    assertResponderType(PageDataWikiPageResponder.class);
   }
 
   @Test
@@ -123,7 +120,7 @@ public class ResponderFactoryTest {
       new File("testDir/files").mkdir();
       FileUtil.createFile("testDir/files/someFile", "this is a test");
       request.setResource("files/someFile");
-      assertResponderType(FileResponder.class, nonExistantPage);
+      assertResponderType(FileResponder.class);
     } finally {
       FileUtil.deleteFileSystemDirectory("testDir");
     }
@@ -277,7 +274,7 @@ public class ResponderFactoryTest {
   @Test
   public void testNotFoundResponder() throws Exception {
     request.setResource("somepage");
-    assertResponderType(NotFoundResponder.class, root);
+    assertResponderType(NotFoundResponder.class);
   }
 
   @Test
@@ -286,14 +283,14 @@ public class ResponderFactoryTest {
     assertResponderTypeMatchesInput("custom", WikiPageResponder.class);
   }
 
-  private void assertResponderType(Class<?> expectedClass, WikiPage page) throws Exception {
-    Responder responder = factory.makeResponder(request, page);
+  private void assertResponderType(Class<?> expectedClass) throws Exception {
+    Responder responder = factory.makeResponder(request);
     assertEquals(expectedClass, responder.getClass());
   }
 
   private void assertResponderTypeMatchesInput(String responderType, Class<?> responderClass) throws Exception {
     request.addInput("responder", responderType);
-    assertResponderType(responderClass, root);
+    assertResponderType(responderClass);
   }
 
   @Test

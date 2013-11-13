@@ -2,42 +2,47 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.testsystems.slim.tables;
 
-import fitnesse.slim.SlimClient;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import fitnesse.testsystems.slim.SlimCommandRunningClient;
 import fitnesse.slim.converters.VoidConverter;
-import fitnesse.slim.instructions.*;
+import fitnesse.slim.instructions.CallAndAssignInstruction;
+import fitnesse.slim.instructions.CallInstruction;
+import fitnesse.slim.instructions.Instruction;
+import fitnesse.slim.instructions.MakeInstruction;
 import fitnesse.testsystems.slim.HtmlTableScanner;
 import fitnesse.testsystems.slim.SlimTestContextImpl;
 import fitnesse.testsystems.slim.Table;
 import fitnesse.testsystems.slim.TableScanner;
-import fitnesse.wiki.InMemoryPage;
 import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPageUtil;
+import fitnesse.wiki.mem.InMemoryPage;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static util.ListUtility.list;
 
 public class DecisionTableTest {
-  private WikiPage root;
   private final String simpleDecisionTable =
     "|DT:fixture|argument|\n" +
       "|var|func?|\n" +
       "|3|5|\n" +
       "|7|9|\n";
+  private final String decisionTableWithSameFunctionMultipleTimes= "|DT:fixture|argument|\n" +
+      "|func?|func?|\n" +
+      "|3|5|\n" +
+      "|7|9|\n";
   private DecisionTable decisionTable;
   private SlimTestContextImpl testContext;
-  private List<Assertion> assertions;
+  private List<SlimAssertion> assertions;
 
   @Before
   public void setUp() throws Exception {
-    root = InMemoryPage.makeRoot("root");
-    assertions = new ArrayList<Assertion>();
+    assertions = new ArrayList<SlimAssertion>();
     testContext = new SlimTestContextImpl();
   }
 
@@ -49,10 +54,11 @@ public class DecisionTableTest {
   }
 
   private List<Instruction> instructions() {
-    return Assertion.getInstructions(assertions);
+    return SlimAssertion.getInstructions(assertions);
   }
 
   private DecisionTable makeDecisionTable(String tableText) throws Exception {
+    WikiPage root = InMemoryPage.makeRoot("root");
     WikiPageUtil.setPageContents(root, tableText);
     TableScanner ts = new HtmlTableScanner(root.getData().getHtml());
     Table t = ts.getTable(0);
@@ -95,13 +101,13 @@ public class DecisionTableTest {
             new CallInstruction("decisionTable_id_1", "decisionTable_id", "table", new Object[]{list()})
     );
     assertEquals(expectedInstructions, instructions());
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list("decisionTable_id_0", "OK"),
-        list("decisionTable_id_1", "OK")
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list("decisionTable_id_0", "OK"),
+                    list("decisionTable_id_1", "OK")
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
 
     String colorizedTable = decisionTable.getTable().toString();
     String expectedColorizedTable =
@@ -124,6 +130,54 @@ public class DecisionTableTest {
             new CallInstruction(id(n++), "decisionTable_id", "reset"),
             new CallInstruction(id(n++), "decisionTable_id", "setVar", new Object[]{"7"}),
             new CallInstruction(id(n++), "decisionTable_id", "execute"),
+            new CallInstruction(id(n++), "decisionTable_id", "func"),
+            new CallInstruction(id(n++), "decisionTable_id", "endTable")
+
+    );
+    assertEquals(expectedInstructions, instructions());
+  }
+
+  @Test
+  public void canBuildInstructionsForMultipleCallsToSameSetter() throws Exception {
+    String decisionTableWithSameSetterMultipleTimes = "|DT:fixture|argument|\n" +
+            "|var|var|\n" +
+            "|3|5|\n" +
+            "|7|9|\n";
+    makeDecisionTableAndBuildInstructions(decisionTableWithSameSetterMultipleTimes);
+    int n = 0;
+    List<Instruction> expectedInstructions = list(
+            new MakeInstruction(id(n++), "decisionTable_id", "fixture", new Object[]{"argument"}),
+            new CallInstruction(id(n++), "decisionTable_id", "table", new Object[]{list(list("var", "var"), list("3", "5"), list("7", "9"))}),
+            new CallInstruction(id(n++), "decisionTable_id", "beginTable"),
+            new CallInstruction(id(n++), "decisionTable_id", "reset"),
+            new CallInstruction(id(n++), "decisionTable_id", "setVar", new Object[]{"3"}),
+            new CallInstruction(id(n++), "decisionTable_id", "setVar", new Object[]{"5"}),
+            new CallInstruction(id(n++), "decisionTable_id", "execute"),
+            new CallInstruction(id(n++), "decisionTable_id", "reset"),
+            new CallInstruction(id(n++), "decisionTable_id", "setVar", new Object[]{"7"}),
+            new CallInstruction(id(n++), "decisionTable_id", "setVar", new Object[]{"9"}),
+            new CallInstruction(id(n++), "decisionTable_id", "execute"),
+            new CallInstruction(id(n++), "decisionTable_id", "endTable")
+
+    );
+    assertEquals(expectedInstructions, instructions());
+  }
+
+  @Test
+  public void canBuildInstructionsForMultipleCallsToSameFunction() throws Exception {
+    makeDecisionTableAndBuildInstructions(decisionTableWithSameFunctionMultipleTimes);
+    int n = 0;
+    List<Instruction> expectedInstructions = list(
+            new MakeInstruction(id(n++), "decisionTable_id", "fixture", new Object[]{"argument"}),
+            new CallInstruction(id(n++), "decisionTable_id", "table", new Object[]{list(list("func?", "func?"), list("3", "5"), list("7", "9"))}),
+            new CallInstruction(id(n++), "decisionTable_id", "beginTable"),
+            new CallInstruction(id(n++), "decisionTable_id", "reset"),
+            new CallInstruction(id(n++), "decisionTable_id", "execute"),
+            new CallInstruction(id(n++), "decisionTable_id", "func"),
+            new CallInstruction(id(n++), "decisionTable_id", "func"),
+            new CallInstruction(id(n++), "decisionTable_id", "reset"),
+            new CallInstruction(id(n++), "decisionTable_id", "execute"),
+            new CallInstruction(id(n++), "decisionTable_id", "func"),
             new CallInstruction(id(n++), "decisionTable_id", "func"),
             new CallInstruction(id(n++), "decisionTable_id", "endTable")
 
@@ -226,23 +280,23 @@ public class DecisionTableTest {
   public void canEvaluateReturnValuesAndColorizeTable() throws Exception {
     DecisionTable dt = makeDecisionTableAndBuildInstructions(simpleDecisionTable);
     int n=0;
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list(id(n++), "OK"),
-        list(id(n++), VoidConverter.VOID_TAG),
-        list(id(n++), VoidConverter.VOID_TAG), // beginTable
-        list(id(n++), VoidConverter.VOID_TAG), //reset
-        list(id(n++), VoidConverter.VOID_TAG), //set
-        list(id(n++), VoidConverter.VOID_TAG), //execute
-        list(id(n++), "5"),
-        list(id(n++), VoidConverter.VOID_TAG),
-        list(id(n++), VoidConverter.VOID_TAG),
-        list(id(n++), VoidConverter.VOID_TAG),
-        list(id(n++), "5"),
-        list(id(n++), VoidConverter.VOID_TAG) //endTable
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list(id(n++), "OK"),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), VoidConverter.VOID_TAG), // beginTable
+                    list(id(n++), VoidConverter.VOID_TAG), //reset
+                    list(id(n++), VoidConverter.VOID_TAG), //set
+                    list(id(n++), VoidConverter.VOID_TAG), //execute
+                    list(id(n++), "5"),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), "5"),
+                    list(id(n++), VoidConverter.VOID_TAG) //endTable
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
 
     String colorizedTable = dt.getTable().toString();
     String expectedColorizedTable =
@@ -259,23 +313,23 @@ public class DecisionTableTest {
   public void translatesTestTablesIntoLiteralTables() throws Exception {
     DecisionTable dt = makeDecisionTableAndBuildInstructions("!" + simpleDecisionTable);
     int n=0;
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list(id(n++), "OK"),
-        list(id(n++), VoidConverter.VOID_TAG),
-        list(id(n++), VoidConverter.VOID_TAG), //beginTable
-        list(id(n++), VoidConverter.VOID_TAG), //reset
-        list(id(n++), VoidConverter.VOID_TAG), //set
-        list(id(n++), VoidConverter.VOID_TAG), //execute
-        list(id(n++), "5"),
-        list(id(n++), VoidConverter.VOID_TAG),
-        list(id(n++), VoidConverter.VOID_TAG),
-        list(id(n++), VoidConverter.VOID_TAG),
-        list(id(n++), "5"),
-        list(id(n++), VoidConverter.VOID_TAG) //endTable
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list(id(n++), "OK"),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), VoidConverter.VOID_TAG), //beginTable
+                    list(id(n++), VoidConverter.VOID_TAG), //reset
+                    list(id(n++), VoidConverter.VOID_TAG), //set
+                    list(id(n++), VoidConverter.VOID_TAG), //execute
+                    list(id(n++), "5"),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), "5"),
+                    list(id(n++), VoidConverter.VOID_TAG) //endTable
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
 
     String colorizedTable = dt.getTable().toString();
     String expectedColorizedTable =
@@ -284,6 +338,39 @@ public class DecisionTableTest {
         "[var, func?], " +
         "[3, pass(5)], " +
         "[7, fail(a=5;e=9)]" +
+        "]";
+    assertEquals(expectedColorizedTable, colorizedTable);
+  }
+
+  @Test
+  public void canEvaluateReturnValuesAndColorizeTableForMultipleCallsToSameFunction() throws Exception {
+    DecisionTable dt = makeDecisionTableAndBuildInstructions(decisionTableWithSameFunctionMultipleTimes);
+    int n=0;
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list(id(n++), "OK"),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), VoidConverter.VOID_TAG), // beginTable
+                    list(id(n++), VoidConverter.VOID_TAG), //reset
+                    list(id(n++), VoidConverter.VOID_TAG), //execute
+                    list(id(n++), "4"),
+                    list(id(n++), "5"),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), VoidConverter.VOID_TAG),
+                    list(id(n++), "7"),
+                    list(id(n++), "5"),
+                    list(id(n++), VoidConverter.VOID_TAG) //endTable
+            )
+    );
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
+
+    String colorizedTable = dt.getTable().toString();
+    String expectedColorizedTable =
+      "[" +
+        "[pass(DT:fixture), argument], " +
+        "[func?, func?], " +
+        "[fail(a=4;e=3), pass(5)], " +
+        "[pass(7), fail(a=5;e=9)]" +
         "]";
     assertEquals(expectedColorizedTable, colorizedTable);
   }

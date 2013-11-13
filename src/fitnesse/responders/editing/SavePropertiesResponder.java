@@ -7,7 +7,6 @@ import fitnesse.FitNesseContext;
 import fitnesse.authentication.AlwaysSecureOperation;
 import fitnesse.authentication.SecureOperation;
 import fitnesse.authentication.SecureResponder;
-import fitnesse.components.RecentChanges;
 import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
@@ -24,14 +23,14 @@ public class SavePropertiesResponder implements SecureResponder {
     SimpleResponse response = new SimpleResponse();
     String resource = request.getResource();
     WikiPagePath path = PathParser.parse(resource);
-    WikiPage page = context.root.getPageCrawler().getPage(context.root, path);
+    WikiPage page = context.root.getPageCrawler().getPage(path);
     if (page == null)
       return new NotFoundResponder().makeResponse(context, request);
     PageData data = page.getData();
     saveAttributes(request, data);
     VersionInfo commitRecord = page.commit(data);
-    response.addHeader("Previous-Version", commitRecord.getName());
-    RecentChanges.updateRecentChanges(data);
+    response.addHeader("Current-Version", commitRecord.getName());
+    context.recentChanges.updateRecentChanges(data);
     response.redirect(resource);
 
     return response;

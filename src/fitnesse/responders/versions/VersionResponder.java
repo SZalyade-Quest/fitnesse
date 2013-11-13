@@ -10,21 +10,22 @@ import fitnesse.FitNesseContext;
 import fitnesse.authentication.SecureOperation;
 import fitnesse.authentication.SecureReadOperation;
 import fitnesse.authentication.SecureResponder;
-import fitnesse.html.HtmlUtil;
 import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
 import fitnesse.responders.ErrorResponder;
 import fitnesse.responders.NotFoundResponder;
-import fitnesse.responders.templateUtilities.HtmlPage;
-import fitnesse.responders.templateUtilities.PageTitle;
-import fitnesse.testsystems.TestPage;
+import fitnesse.html.template.HtmlPage;
+import fitnesse.html.template.PageTitle;
+import fitnesse.testrunner.WikiTestPage;
 import fitnesse.wiki.PageCrawler;
 import fitnesse.wiki.PageData;
 import fitnesse.wiki.PathParser;
+import fitnesse.wiki.ReadOnlyPageData;
 import fitnesse.wiki.VersionInfo;
 import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPagePath;
+import fitnesse.wiki.WikiPageUtil;
 
 public class VersionResponder implements SecureResponder {
   private String version;
@@ -38,11 +39,11 @@ public class VersionResponder implements SecureResponder {
 
     PageCrawler pageCrawler = context.root.getPageCrawler();
     WikiPagePath path = PathParser.parse(resource);
-    WikiPage page = pageCrawler.getPage(context.root, path);
+    WikiPage page = pageCrawler.getPage(path);
     if (page == null)
       return new NotFoundResponder().makeResponse(context, request);
 
-    String fullPathName = PathParser.render(pageCrawler.getFullPath(page));
+    String fullPathName = PathParser.render(page.getPageCrawler().getFullPath());
     HtmlPage html = makeHtml(fullPathName, page, context);
 
     SimpleResponse response = new SimpleResponse();
@@ -61,7 +62,7 @@ public class VersionResponder implements SecureResponder {
     html.put("rollbackVersion", version);
     html.put("localPath", name);
 
-    List<VersionInfo> versions = new ArrayList<VersionInfo>(page.getData().getVersions());
+    List<VersionInfo> versions = new ArrayList<VersionInfo>(page.getVersions());
     Collections.sort(versions);
     Collections.reverse(versions);
     String nextVersion = selectNextVersion(versions, version);
@@ -107,14 +108,14 @@ public class VersionResponder implements SecureResponder {
     }
 
     public String render() {
-      PageData data;
+      ReadOnlyPageData data;
       if (isTestPage(pageData)) {
-        TestPage testPage = new TestPage(pageData);
+        WikiTestPage testPage = new WikiTestPage(pageData);
         data = testPage.getDecoratedData();
       } else {
         data = pageData;
       }
-      return HtmlUtil.makePageHtml(data);
+      return WikiPageUtil.makePageHtml(data);
 
     }
 

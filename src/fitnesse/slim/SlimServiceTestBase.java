@@ -6,6 +6,8 @@ import fitnesse.slim.instructions.CallInstruction;
 import fitnesse.slim.instructions.ImportInstruction;
 import fitnesse.slim.instructions.Instruction;
 import fitnesse.slim.instructions.MakeInstruction;
+import fitnesse.testsystems.MockCommandRunner;
+import fitnesse.testsystems.slim.SlimCommandRunningClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +24,7 @@ import static org.junit.Assert.*;
 
 public abstract class SlimServiceTestBase {
   protected List<Instruction> statements;
-  protected SlimClient slimClient;
+  protected SlimCommandRunningClient slimClient;
 
   protected abstract void startSlimService() throws Exception;
 
@@ -37,7 +39,7 @@ public abstract class SlimServiceTestBase {
   @Before
   public void setUp() throws InterruptedException, IOException {
     createSlimService();
-    slimClient = new SlimClient("localhost", 8099);
+    slimClient = new SlimCommandRunningClient(new MockCommandRunner(), "localhost", 8099);
     statements = new ArrayList<Instruction>();
     slimClient.connect();
   }
@@ -62,8 +64,8 @@ public abstract class SlimServiceTestBase {
   }
 
   protected void teardown() throws Exception {
-    slimClient.sendBye();
-    slimClient.close();
+    slimClient.bye();
+    slimClient.kill();
     closeSlimService();
   }
 
@@ -166,8 +168,9 @@ public abstract class SlimServiceTestBase {
   @Test
   public void verboseArgument() throws Exception {
     String args[] = {"-v", "99"};
-    assertTrue(SlimService.parseCommandLine(args));
-    assertTrue(SlimService.verbose);
+    SlimService.Options options = SlimService.parseCommandLine(args);
+    assertNotNull(options);
+    assertTrue(options.verbose);
   }
 
   @Test
@@ -201,10 +204,11 @@ public abstract class SlimServiceTestBase {
     String commandLine = "-v -i fitnesse.slim.fixtureInteraction.DefaultInteraction 7890";
     String[] args = commandLine.split(" ");
 
-    assertTrue("should parse correctly", SlimService.parseCommandLine(args));
+    SlimService.Options options = SlimService.parseCommandLine(args);
+    assertNotNull("should parse correctly", options);
     assertEquals("should have interaction class set", "fitnesse.slim.fixtureInteraction.DefaultInteraction", SlimService.getInteractionClass().getName());
-    assertTrue("should be verbose", SlimService.verbose);
-    assertEquals("should have set port", 7890, SlimService.port);
+    assertTrue("should be verbose", options.verbose);
+    assertEquals("should have set port", 7890, options.port);
   }
 
   @Test
@@ -212,10 +216,11 @@ public abstract class SlimServiceTestBase {
     String commandLine = "-v -i fitnesse.slim.fixtureInteraction.DefaultInteraction 7890";
     String[] args = commandLine.split(" ");
 
-    assertTrue("should parse correctly", SlimService.parseCommandLine(args));
+    SlimService.Options options = SlimService.parseCommandLine(args);
+    assertNotNull("should parse correctly", options);
     assertEquals("should have interaction class set", "fitnesse.slim.fixtureInteraction.DefaultInteraction", SlimService.getInteractionClass().getName());
-    assertTrue("should be verbose", SlimService.verbose);
-    assertEquals("should have set port", 7890, SlimService.port);
+    assertTrue("should be verbose", options.verbose);
+    assertEquals("should have set port", 7890, options.port);
   }
 
 }

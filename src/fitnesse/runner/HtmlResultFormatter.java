@@ -6,13 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import fitnesse.components.ContentBuffer;
-import fitnesse.responders.PageFactory;
-import fitnesse.responders.run.formatters.SuiteHtmlFormatter;
-import fitnesse.responders.templateUtilities.HtmlPage;
-import fitnesse.responders.templateUtilities.PageTitle;
+import fitnesse.reporting.SuiteHtmlFormatter;
+import fitnesse.html.template.HtmlPage;
+import fitnesse.html.template.PageTitle;
 import fitnesse.testsystems.TestSummary;
 import fitnesse.wiki.PathParser;
 import fitnesse.FitNesseContext;
+import fitnesse.wiki.WikiPage;
+import fitnesse.wiki.mem.InMemoryPage;
 
 public class HtmlResultFormatter implements ResultFormatter {
   private ContentBuffer buffer;
@@ -21,7 +22,6 @@ public class HtmlResultFormatter implements ResultFormatter {
   private FitNesseContext context;
   private String host;
   private String rootPath;
-  private HtmlPage htmlPage;
 
   public HtmlResultFormatter(FitNesseContext context, String host, String rootPath) throws IOException {
     this.context = context;
@@ -30,13 +30,14 @@ public class HtmlResultFormatter implements ResultFormatter {
 
     buffer = new ContentBuffer(".html");
 
-    createPage(context.pageFactory, rootPath);
+    createPage(rootPath);
     suiteFormatter = createCustomFormatter();
     System.out.println("Built HtmlResultFormatter for " + rootPath);
   }
 
   private SuiteHtmlFormatter createCustomFormatter() {
-    SuiteHtmlFormatter formatter = new SuiteHtmlFormatter(context) {
+    WikiPage root = InMemoryPage.makeRoot("RooT");
+    SuiteHtmlFormatter formatter = new SuiteHtmlFormatter(context, root) {
       @Override
       protected void writeData(String output) {
         try {
@@ -50,8 +51,8 @@ public class HtmlResultFormatter implements ResultFormatter {
     return formatter;
   }
   
-  private void createPage(PageFactory pageFactory, String rootPath) {
-    htmlPage = context.pageFactory.newPage();
+  private void createPage(String rootPath) {
+    HtmlPage htmlPage = context.pageFactory.newPage();
 
     htmlPage.setTitle(rootPath);
     htmlPage.put("baseUri", baseUri(host));

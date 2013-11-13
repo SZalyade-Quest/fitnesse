@@ -2,17 +2,25 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.testsystems.slim.tables;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import fitnesse.slim.instructions.Instruction;
 import fitnesse.testsystems.ExecutionResult;
+import fitnesse.testsystems.TestResult;
 import fitnesse.testsystems.TestSummary;
 import fitnesse.testsystems.slim.SlimTestContext;
 import fitnesse.testsystems.slim.Table;
-import fitnesse.testsystems.slim.results.TestResult;
+import fitnesse.testsystems.slim.results.SlimTestResult;
 import util.StringUtil;
-
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class ScenarioTable extends SlimTable {
@@ -34,7 +42,7 @@ public class ScenarioTable extends SlimTable {
   }
 
   @Override
-  public List<Assertion> getAssertions() throws SyntaxError {
+  public List<SlimAssertion> getAssertions() throws SyntaxError {
     parseTable();
 
     // Note: scenario's only add instructions when needed to,
@@ -45,14 +53,18 @@ public class ScenarioTable extends SlimTable {
   private void parseTable() throws SyntaxError {
     validateHeader();
 
-    String firstNameCell = table.getCellContents(1, 0);
-    parameterized = isNameParameterized(firstNameCell);
+    parameterized = determineParameterized();
     name = getScenarioName();
     getTestContext().addScenario(name, this);
     getScenarioArguments();
   }
 
-  private void getScenarioArguments() {
+  protected boolean determineParameterized() {
+    String firstNameCell = table.getCellContents(1, 0);
+    return isNameParameterized(firstNameCell);
+  }
+
+    protected void getScenarioArguments() {
     if (parameterized) {
       getArgumentsForParameterizedName();
     } else {
@@ -80,8 +92,12 @@ public class ScenarioTable extends SlimTable {
     String[] arguments = argumentString.split(",");
 
     for (String argument : arguments) {
-      inputs.add(Disgracer.disgraceMethodName(argument.trim()));
+      addInput(Disgracer.disgraceMethodName(argument.trim()));
     }
+  }
+
+  protected void addInput(String argument) {
+    inputs.add(argument);
   }
 
   public String getScenarioName() {
@@ -134,11 +150,11 @@ public class ScenarioTable extends SlimTable {
     return outputs;
   }
 
-  public List<Assertion> call(final Map<String, String> scenarioArguments,
+  public List<SlimAssertion> call(final Map<String, String> scenarioArguments,
                    SlimTable parentTable, int row) throws SyntaxError {
     Table newTable = getTable().asTemplate(new Table.CellContentSubstitution() {
       @Override
-      public String substitute(int col, int row, String content) throws SyntaxError {
+      public String substitute(String content) throws SyntaxError {
         for (Map.Entry<String, String> scenarioArgument : scenarioArguments.entrySet()) {
           String arg = scenarioArgument.getKey();
           if (getInputs().contains(arg)) {
@@ -152,15 +168,19 @@ public class ScenarioTable extends SlimTable {
         return content;
       }
     });
-    ScriptTable t = new ScriptTable(newTable, id,
-            new ScenarioTestContext(parentTable.getTestContext()));
+    ScenarioTestContext testContext = new ScenarioTestContext(parentTable.getTestContext());
+    ScriptTable t = createChild(testContext, newTable);
     parentTable.addChildTable(t, row);
-    List<Assertion> assertions = t.getAssertions();
+    List<SlimAssertion> assertions = t.getAssertions();
     assertions.add(makeAssertion(Instruction.NOOP_INSTRUCTION, new ScenarioExpectation(t, row)));
     return assertions;
   }
 
-  public List<Assertion> call(String[] args, ScriptTable parentTable, int row) throws SyntaxError {
+  protected ScriptTable createChild(ScenarioTestContext testContext, Table newTable) {
+    return new ScriptTable(newTable, id, testContext);
+  }
+
+  public List<SlimAssertion> call(String[] args, ScriptTable parentTable, int row) throws SyntaxError {
     Map<String, String> scenarioArguments = new HashMap<String, String>();
 
     for (int i = 0; (i < inputs.size()) && (i < args.length); i++)
@@ -239,12 +259,12 @@ public class ScenarioTable extends SlimTable {
     public TestResult evaluateExpectation(Object returnValue) {
       SlimTable parent = scriptTable.getParent();
       ExecutionResult testStatus = ((ScenarioTestContext) scriptTable.getTestContext()).getExecutionResult();
-      parent.getTable().updateContent(getRow(), new TestResult(testStatus));
+      parent.getTable().updateContent(getRow(), new SlimTestResult(testStatus));
       return null;
     }
 
     @Override
-    protected TestResult createEvaluationMessage(String actual, String expected) {
+    protected SlimTestResult createEvaluationMessage(String actual, String expected) {
       return null;
     }
   }

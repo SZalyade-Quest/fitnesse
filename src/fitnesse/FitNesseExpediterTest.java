@@ -2,6 +2,13 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+
 import fitnesse.authentication.Authenticator;
 import fitnesse.authentication.UnauthorizedResponder;
 import fitnesse.http.MockRequest;
@@ -10,33 +17,29 @@ import fitnesse.http.Response;
 import fitnesse.http.ResponseParser;
 import fitnesse.testutil.FitNesseUtil;
 import fitnesse.util.MockSocket;
-import fitnesse.wiki.InMemoryPage;
-import util.RegexTestCase;
+import fitnesse.wiki.WikiPage;
+import fitnesse.wiki.mem.InMemoryPage;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
-public class FitNesseExpediterTest extends RegexTestCase {
+public class FitNesseExpediterTest {
   private FitNesseExpediter expediter;
   private MockSocket socket;
   private FitNesseContext context;
-  private InMemoryPage root;
   private PipedInputStream clientInput;
   private PipedOutputStream clientOutput;
   private ResponseParser response;
 
+  @Before
   public void setUp() throws Exception {
-    root = (InMemoryPage) InMemoryPage.makeRoot("RooT");
+    WikiPage root = InMemoryPage.makeRoot("RooT");
     root.addChildPage("FrontPage");
     socket = new MockSocket();
     context = FitNesseUtil.makeTestContext(root);
     expediter = new FitNesseExpediter(socket, context);
   }
 
-  public void tearDown() throws Exception {
-  }
-
+  @Test
   public void testAuthenticationGetsCalled() throws Exception {
     context = FitNesseUtil.makeTestContext(context, new StoneWallAuthenticator());
     expediter = new FitNesseExpediter(socket, context);
@@ -45,6 +48,7 @@ public class FitNesseExpediterTest extends RegexTestCase {
     assertEquals(401, response.getStatus());
   }
 
+  @Test
   public void testClosedSocketMidResponse() throws Exception {
     try {
       MockRequest request = new MockRequest();
@@ -57,6 +61,7 @@ public class FitNesseExpediterTest extends RegexTestCase {
     }
   }
 
+  @Test
   public void testIncompleteRequestsTimeOut() throws Exception {
     final FitNesseExpediter sender = preparePipedFitNesseExpediter();
 
@@ -82,6 +87,7 @@ public class FitNesseExpediterTest extends RegexTestCase {
     return sender;
   }
 
+  @Test
   public void testCompleteRequest() throws Exception {
     final FitNesseExpediter sender = preparePipedFitNesseExpediter();
 
@@ -98,6 +104,7 @@ public class FitNesseExpediterTest extends RegexTestCase {
     assertEquals(200, response.getStatus());
   }
 
+  @Test
   public void testSlowButCompleteRequest() throws Exception {
     final FitNesseExpediter sender = preparePipedFitNesseExpediter();
 

@@ -24,7 +24,7 @@ import fitnesse.authentication.OneUserAuthenticator;
 import fitnesse.http.MockRequest;
 import fitnesse.http.MockResponseSender;
 import fitnesse.responders.editing.EditResponder;
-import fitnesse.responders.testHistory.TestHistory;
+import fitnesse.reporting.history.TestHistory;
 import fitnesse.util.MockSocket;
 import fitnesse.wiki.PageCrawler;
 import fitnesse.wiki.PageData;
@@ -73,7 +73,7 @@ public class PageDriver {
     request.addInput("pageContent", contents);
     request.parseRequestUri("/" + pageName);
     WikiPagePath path = PathParser.parse(request.getResource()); // uri;
-    FitnesseFixtureContext.page = FitnesseFixtureContext.root.getPageCrawler().getPage(FitnesseFixtureContext.root, path);
+    FitnesseFixtureContext.page = FitnesseFixtureContext.root.getPageCrawler().getPage(path);
     FitNesseExpediter expediter = new FitNesseExpediter(new MockSocket(""), FitnesseFixtureContext.context);
     FitnesseFixtureContext.response = expediter.createGoodResponse(request);
     FitnesseFixtureContext.sender = new MockResponseSender();
@@ -88,7 +88,7 @@ public class PageDriver {
   public String lastModifiedOfPage(String pageName) throws Exception {
     WikiPage root = FitnesseFixtureContext.root;
     WikiPagePath pagePath = PathParser.parse(pageName);
-    WikiPage thePage = root.getPageCrawler().getPage(root, pagePath);
+    WikiPage thePage = root.getPageCrawler().getPage(pagePath);
     PageData data = thePage.getData();
     return data.getAttribute(PageData.LAST_MODIFYING_USER);
   }
@@ -96,14 +96,14 @@ public class PageDriver {
   public boolean pageIsASymbolicLink(String pageName) {
     WikiPage root = FitnesseFixtureContext.root;
     WikiPagePath pagePath = PathParser.parse(pageName);
-    WikiPage thePage = root.getPageCrawler().getPage(root, pagePath);
+    WikiPage thePage = root.getPageCrawler().getPage(pagePath);
     return thePage instanceof SymbolicPage;
   }
 
   public boolean pageExists(String pageName) {
 	    WikiPage root = FitnesseFixtureContext.root;
 	    WikiPagePath pagePath = PathParser.parse(pageName);
-	    WikiPage thePage = root.getPageCrawler().getPage(root, pagePath);
+	    WikiPage thePage = root.getPageCrawler().getPage(pagePath);
 	    return thePage != null;
   }
 
@@ -118,7 +118,7 @@ public class PageDriver {
   private void onPageSetAttribute(String pageName, String attrName) {
     WikiPage root = FitnesseFixtureContext.root;
     WikiPagePath pagePath = PathParser.parse(pageName);
-    WikiPage thePage = root.getPageCrawler().getPage(root, pagePath);
+    WikiPage thePage = root.getPageCrawler().getPage(pagePath);
     PageData data = thePage.getData();
     data.setAttribute(attrName, "true");
     thePage.commit(data);
@@ -201,17 +201,16 @@ public class PageDriver {
     return dateFormat.format(date);
   }
 
-  public int countOfTagWithIdAndWithClassBelowTagWithIdPrefix(String childTag, String childId, String tagClass, String parentTag, String parentIdPrefix) throws Exception {
+  public int countOfTagWithClassBelowTagWithIdPrefix(String childTag, String tagClass, String parentTag, String parentIdPrefix) throws Exception {
     NodeList parents = getMatchingTags(
-      new AndFilter(
-        new TagNameFilter(parentTag),
-        new HasAttributePrefixFilter("id", parentIdPrefix))
+            new AndFilter(
+                    new TagNameFilter(parentTag),
+                    new HasAttributePrefixFilter("id", parentIdPrefix))
     );
 
     NodeFilter predicates[] = {
-      new TagNameFilter(childTag),
-      new HasAttributeFilter("class", tagClass),
-      new HasAttributeFilter("id", childId)
+            new TagNameFilter(childTag),
+            new HasAttributeFilter("class", tagClass)
     };
     NodeFilter filter = new AndFilter(predicates);
     NodeList matches = parents.extractAllNodesThatMatch(filter, true);
@@ -271,15 +270,9 @@ public class PageDriver {
 
   public boolean pageHasAttribute(String fullPathOfPage, String attribute) throws Exception {
     PageCrawler crawler = FitnesseFixtureContext.root.getPageCrawler();
-    WikiPage page = crawler.getPage(FitnesseFixtureContext.root, PathParser.parse(fullPathOfPage));
+    WikiPage page = crawler.getPage(PathParser.parse(fullPathOfPage));
     PageData data = page.getData();
     return data.hasAttribute(attribute);
-  }
-
-  public void givenUserWithPassword(String user, String password) {
-    Builder builder = new Builder(FitnesseFixtureContext.context);
-    builder.authenticator = new OneUserAuthenticator(user, password);
-    FitnesseFixtureContext.context = builder.createFitNesseContext();
   }
 
   public void sendAsHash(Map<String, String> hash) {

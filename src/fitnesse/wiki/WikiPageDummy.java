@@ -3,32 +3,29 @@
 
 package fitnesse.wiki;
 
-import util.Clock;
-
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+
+import util.Clock;
 
 public class WikiPageDummy implements WikiPage {
   private static final long serialVersionUID = 1L;
 
   public String name;
-  protected String location;
   private PageData pageData;
   private WikiPage parent;
 
   public WikiPageDummy(String name, String content) {
     this.name = name;
-    pageData = new PageData(this, content);
-  }
-
-  public WikiPageDummy(String location) {
-    this.location = location;
-    name = "Default";
+    pageData = new PageData(this);
+    pageData.setContent(content);
   }
 
   public WikiPageDummy() {
-    location = null;
     name = "Default";
+    pageData = new PageData(this);
   }
 
   public String getName() {
@@ -43,11 +40,20 @@ public class WikiPageDummy implements WikiPage {
     this.parent = parent;
   }
 
+  public boolean isRoot() {
+    return parent == null;
+  }
+
   public PageData getData() {
     return pageData;
   }
 
   public ReadOnlyPageData readOnlyData() { return getData(); }
+
+  @Override
+  public Collection<VersionInfo> getVersions() {
+    return Collections.emptySet();
+  }
 
   public VersionInfo commit(PageData data) {
     pageData = data;
@@ -70,7 +76,7 @@ public class WikiPageDummy implements WikiPage {
   }
 
   public PageCrawler getPageCrawler() {
-    return new PageCrawlerImpl();
+    return new PageCrawlerImpl(this);
   }
 
   public WikiPage getHeaderPage() {
@@ -91,13 +97,5 @@ public class WikiPageDummy implements WikiPage {
 
   public WikiPage getChildPage(String name) {
     return null;
-  }
-
-  public String getHelpText() {
-    return "Dummy help text";
-  }
-  
-  public boolean isOpenInNewWindow() {
-    return false;
   }
 }

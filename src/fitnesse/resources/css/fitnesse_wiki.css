@@ -42,7 +42,7 @@ article .centered {
 }
 
 .collapsible > div {
-  margin-left: 16px;
+    margin: 16px 0 0 16px;
 }
 
 .collapsible.closed > div {
@@ -79,6 +79,13 @@ article .centered {
   border-left: 1px solid #BF8660;
 }
 
+table {
+	border: 1px solid #EEEEEE;
+	border-collapse:collapse;
+}
+td, th {
+	padding: 0.25em 0.5em;
+}
 table.plain_text_table {
   border-top: none;
   border-right: none;
@@ -91,19 +98,25 @@ table.plain_text_table th {
   border: none;
 }
 
-/** !style_* */
-.error {
+/** Test output */
+.error,
+span.error * {
   background-color: #ffffaa;
 }
-.pass {
+.pass,
+span.pass * {
   background-color: #AAFFAA;
 }
-.fail {
+.fail,
+span.fail * {
   background-color: #FFAAAA;
 }
-.ignore {
+.ignore,
+span.ignore * {
   background-color: lightgray;
 }
+
+/** !style_* */
 .caps {
   font-variant: small-caps;
 }

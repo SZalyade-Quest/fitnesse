@@ -6,11 +6,14 @@ import fitnesse.FitNesse;
 import fitnesse.FitNesseContext;
 import fitnesse.FitNesseContext.Builder;
 import fitnesse.authentication.Authenticator;
-import fitnesse.wiki.InMemoryPage;
+import fitnesse.wiki.RecentChangesWikiPage;
+import fitnesse.wiki.fs.ZipFileVersionsController;
+import fitnesse.wiki.mem.InMemoryPage;
 import fitnesse.wiki.WikiPage;
 import util.FileUtil;
 
 import java.io.IOException;
+import java.util.Properties;
 
 public class FitNesseUtil {
   public static final String base = "TestDir";
@@ -26,7 +29,7 @@ public class FitNesseUtil {
   }
 
   public static void startFitnesseWithContext(FitNesseContext context) {
-    instance = new FitNesse(context);
+    instance = context.fitNesse;
     instance.start();
   }
 
@@ -76,6 +79,9 @@ public class FitNesseUtil {
     builder.rootDirectoryName = rootDirectoryName;
     builder.port = port;
     builder.authenticator = authenticator;
+    builder.versionsController = new ZipFileVersionsController();
+    builder.recentChanges = new RecentChangesWikiPage();
+    builder.properties = new Properties();
     FitNesseContext context = builder.createFitNesseContext();
 
     // Ensure Velocity is configured with the default root directory name (FitNesseRoot)

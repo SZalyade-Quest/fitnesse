@@ -1,20 +1,19 @@
 package fitnesse.junit;
 
-import fitnesse.responders.run.ResultsListener;
-import fitnesse.testsystems.CompositeExecutionLog;
-import fitnesse.testsystems.TestPage;
+import fitnesse.testsystems.Assertion;
+import fitnesse.testsystems.ExceptionResult;
+import fitnesse.testsystems.ExecutionLog;
+import fitnesse.testsystems.TestResult;
 import fitnesse.testsystems.TestSummary;
 import fitnesse.testsystems.TestSystem;
-import fitnesse.testsystems.slim.results.ExceptionResult;
-import fitnesse.testsystems.slim.results.TestResult;
-import fitnesse.testsystems.slim.tables.Assertion;
+import fitnesse.testrunner.WikiTestPage;
+import fitnesse.testsystems.TestSystemListener;
 import fitnesse.wiki.WikiPagePath;
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
-import util.TimeMeasurement;
 
-public class JUnitRunNotifierResultsListener implements ResultsListener {
+public class JUnitRunNotifierResultsListener implements TestSystemListener<WikiTestPage> {
 
   private final Class<?> mainClass;
   private final RunNotifier notifier;
@@ -25,34 +24,18 @@ public class JUnitRunNotifierResultsListener implements ResultsListener {
   }
 
   @Override
-  public void allTestingComplete(TimeMeasurement totalTimeMeasurement) {
-  }
-
-  @Override
-  public void announceNumberTestsToRun(int testsToRun) {
-  }
-
-  @Override
-  public void errorOccured() {
-  }
-
-  @Override
-  public void newTestStarted(TestPage test, TimeMeasurement timeMeasurement) {
+  public void testStarted(WikiTestPage test) {
     if (test.isTestPage()) {
       notifier.fireTestStarted(descriptionFor(test));
     }
   }
 
-  private Description descriptionFor(TestPage test) {
+  private Description descriptionFor(WikiTestPage test) {
     return Description.createTestDescription(mainClass, new WikiPagePath(test.getSourcePage()).toString());
   }
 
   @Override
-  public void setExecutionLogAndTrackingId(String stopResponderId, CompositeExecutionLog log) {
-  }
-
-  @Override
-  public void testComplete(TestPage test, TestSummary testSummary, TimeMeasurement timeMeasurement) {
+  public void testComplete(WikiTestPage test, TestSummary testSummary) {
     if (testSummary.wrong == 0 && testSummary.exceptions == 0) {
       if (test.isTestPage()) {
         notifier.fireTestFinished(descriptionFor(test));
@@ -76,6 +59,11 @@ public class JUnitRunNotifierResultsListener implements ResultsListener {
   }
 
   @Override
-  public void testSystemStarted(TestSystem testSystem, String testSystemName, String testRunner) {
+  public void testSystemStarted(TestSystem testSystem) {
   }
+
+  @Override
+  public void testSystemStopped(TestSystem testSystem, ExecutionLog executionLog, Throwable cause) {
+  }
+
 }

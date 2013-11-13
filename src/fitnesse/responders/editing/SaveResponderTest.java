@@ -2,25 +2,22 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.responders.editing;
 
-import static util.RegexTestCase.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static util.RegexTestCase.assertHasRegexp;
 import static util.RegexTestCase.assertSubString;
-import static util.RegexTestCase.assertTrue;
 
-import fitnesse.FitNesseContext;
 import fitnesse.Responder;
-import fitnesse.components.SaveRecorder;
 import fitnesse.http.MockRequest;
 import fitnesse.http.MockResponseSender;
 import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
 import fitnesse.testutil.FitNesseUtil;
-import fitnesse.wiki.InMemoryPage;
-import fitnesse.wiki.PageCrawler;
 import fitnesse.wiki.PageData;
 import fitnesse.wiki.PathParser;
 import fitnesse.wiki.WikiPage;
-
+import fitnesse.wiki.WikiPageUtil;
+import fitnesse.wiki.mem.InMemoryPage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,13 +27,11 @@ public class SaveResponderTest {
   private Response response;
   public MockRequest request;
   public Responder responder;
-  private PageCrawler crawler;
 
   @Before
   public void setUp() throws Exception {
     root = InMemoryPage.makeRoot("RooT");
     FitNesseUtil.makeTestContext(root);
-    crawler = root.getPageCrawler();
     request = new MockRequest();
     responder = new SaveResponder();
     SaveResponder.contentFilter = null;
@@ -50,7 +45,7 @@ public class SaveResponderTest {
 
   @Test
   public void testResponse() throws Exception {
-    crawler.addPage(root, PathParser.parse("ChildPage"));
+    WikiPageUtil.addPage(root, PathParser.parse("ChildPage"));
     prepareRequest("ChildPage");
 
     Response response = responder.makeResponse(FitNesseUtil.makeTestContext(root), request);
@@ -73,7 +68,7 @@ public class SaveResponderTest {
 
   @Test
   public void testResponseWithRedirect() throws Exception {
-    crawler.addPage(root, PathParser.parse("ChildPage"));
+    WikiPageUtil.addPage(root, PathParser.parse("ChildPage"));
     prepareRequest("ChildPage");
     request.addInput("redirect", "http://fitnesse.org:8080/SomePage");
 
@@ -169,7 +164,7 @@ public class SaveResponderTest {
         return false;
       }
     };
-    crawler.addPage(root, PathParser.parse("ChildPage"));
+    WikiPageUtil.addPage(root, PathParser.parse("ChildPage"));
     prepareRequest("ChildPage");
 
     Response response = responder.makeResponse(FitNesseUtil.makeTestContext(root), request);
@@ -180,7 +175,7 @@ public class SaveResponderTest {
   }
 
   private void createAndSaveANewPage(String pageName) throws Exception {
-    WikiPage simplePage = crawler.addPage(root, PathParser.parse(pageName));
+    WikiPage simplePage = WikiPageUtil.addPage(root, PathParser.parse(pageName));
 
     PageData data = simplePage.getData();
     SaveRecorder.pageSaved(data, 0);
@@ -188,7 +183,7 @@ public class SaveResponderTest {
   }
 
   private void doSimpleEdit() throws Exception {
-    crawler.addPage(root, PathParser.parse("EditPage"));
+    WikiPageUtil.addPage(root, PathParser.parse("EditPage"));
     addRequestParameters();
 
     response = responder.makeResponse(FitNesseUtil.makeTestContext(root), request);
@@ -201,6 +196,6 @@ public class SaveResponderTest {
   @Test
   public void testHasVersionHeader() throws Exception {
     doSimpleEdit();
-    assertTrue("header missing", response.getHeader("Previous-Version") != null);
+    assertTrue("header missing", response.getHeader("Current-Version") != null);
   }
 }

@@ -25,7 +25,10 @@ public class Request {
   private static final Pattern multipartHeaderPattern = Pattern
   .compile("([^ =]+)=\\\"([^\"]*)\\\"");
 
-  private static Collection<String> allowedMethods = buildAllowedMethodList();
+  private static final Collection<String> allowedMethods = buildAllowedMethodList();
+
+  /** input key to suppress chunking. */
+  public static final String NOCHUNK = "nochunk";
 
   protected StreamReader input;
   protected String requestURI;

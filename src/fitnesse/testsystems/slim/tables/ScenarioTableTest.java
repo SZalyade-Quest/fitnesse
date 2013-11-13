@@ -2,31 +2,29 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.testsystems.slim.tables;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import fitnesse.testsystems.slim.HtmlTableScanner;
 import fitnesse.testsystems.slim.SlimTestContextImpl;
 import fitnesse.testsystems.slim.Table;
 import fitnesse.testsystems.slim.TableScanner;
-
-import fitnesse.wiki.InMemoryPage;
 import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPageUtil;
-import static org.junit.Assert.*;
-
+import fitnesse.wiki.mem.InMemoryPage;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import static org.junit.Assert.*;
 
 
 public class ScenarioTableTest {
     private WikiPage root;
     private List<Object> instructions;
     public ScenarioTable st;
-    private SlimTestContextImpl testContext;
 
-    @Before
+  @Before
     public void setUp() throws Exception {
         root = InMemoryPage.makeRoot("root");
         instructions = new ArrayList<Object>();
@@ -38,7 +36,7 @@ public class ScenarioTableTest {
 
         TableScanner ts = new HtmlTableScanner(root.getData().getHtml());
         Table t = ts.getTable(0);
-        testContext = new SlimTestContextImpl();
+      SlimTestContextImpl testContext = new SlimTestContextImpl();
         st = new ScenarioTable(t, "id", testContext);
         instructions.addAll(st.getAssertions());
 

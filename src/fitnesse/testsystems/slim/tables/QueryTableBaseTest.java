@@ -1,31 +1,35 @@
 package fitnesse.testsystems.slim.tables;
 
-import fitnesse.slim.SlimClient;
-import fitnesse.slim.converters.VoidConverter;
-import fitnesse.slim.instructions.CallInstruction;
-import fitnesse.slim.instructions.Instruction;
-import fitnesse.slim.instructions.InstructionExecutor;
-import fitnesse.slim.instructions.MakeInstruction;
-import fitnesse.testsystems.slim.*;
-import fitnesse.wiki.InMemoryPage;
-import fitnesse.wiki.WikiPage;
-import fitnesse.wiki.WikiPageUtil;
-import fitnesse.wikitext.Utils;
-import org.junit.Before;
-import org.junit.Test;
-import util.ListUtility;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import fitnesse.testsystems.slim.SlimCommandRunningClient;
+import fitnesse.slim.converters.VoidConverter;
+import fitnesse.slim.instructions.CallInstruction;
+import fitnesse.slim.instructions.Instruction;
+import fitnesse.slim.instructions.MakeInstruction;
+import fitnesse.testsystems.slim.HtmlTableScanner;
+import fitnesse.testsystems.slim.SlimTestContext;
+import fitnesse.testsystems.slim.SlimTestContextImpl;
+import fitnesse.testsystems.slim.Table;
+import fitnesse.testsystems.slim.TableScanner;
+import fitnesse.wiki.WikiPage;
+import fitnesse.wiki.WikiPageUtil;
+import fitnesse.wiki.mem.InMemoryPage;
+import fitnesse.wikitext.Utils;
+import org.junit.Before;
+import org.junit.Test;
+import util.ListUtility;
+
+import static org.junit.Assert.assertEquals;
 import static util.ListUtility.list;
 
 public abstract class QueryTableBaseTest {
   private WikiPage root;
-  private List<Assertion> assertions;
+  private List<SlimAssertion> assertions;
   private String queryTableHeader;
   public QueryTable qt;
   private SlimTestContextImpl testContext;
@@ -34,7 +38,7 @@ public abstract class QueryTableBaseTest {
   @Before
   public void setUp() throws Exception {
     root = InMemoryPage.makeRoot("root");
-    assertions = new ArrayList<Assertion>();
+    assertions = new ArrayList<SlimAssertion>();
     queryTableHeader =
       "|" + tableType() + ":fixture|argument|\n" +
         "|n|2n|\n";
@@ -68,12 +72,12 @@ public abstract class QueryTableBaseTest {
   @SuppressWarnings("unchecked")
   protected void assertQueryResults(String queryRows, List<Object> queryResults, String table) throws Exception {
     makeQueryTableAndBuildInstructions(queryTableHeader + queryRows);
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(list(
-      list("queryTable_id_0", "OK"),
-      list("queryTable_id_1", "blah"),
-      list("queryTable_id_2", queryResults)
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(list(
+            list("queryTable_id_0", "OK"),
+            list("queryTable_id_1", "blah"),
+            list("queryTable_id_2", queryResults)
     ));
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
     org.junit.Assert.assertEquals(table, qt.getTable().toString());
   }
 
@@ -90,7 +94,7 @@ public abstract class QueryTableBaseTest {
   }
 
   private List<Instruction> instructions() {
-    return Assertion.getInstructions(assertions);
+    return SlimAssertion.getInstructions(assertions);
   }
 
   @Test
@@ -229,6 +233,8 @@ public abstract class QueryTableBaseTest {
         "[pass(3), fail(a=field 2n not present;e=4)]" +
         "]"
     );
+    assertEquals(1, testContext.getTestSummary().getRight());
+    assertEquals(1, testContext.getTestSummary().getWrong());
   }
 
   @Test
@@ -244,24 +250,26 @@ public abstract class QueryTableBaseTest {
         "[fail(a=3;surplus), fail(field 2n not present)]" +
         "]"
     );
+    assertEquals(0, testContext.getTestSummary().getRight());
+    assertEquals(2, testContext.getTestSummary().getWrong());
   }
 
   @Test
   public void variablesAreReplacedInMatch() throws Exception {
     makeQueryTableAndBuildInstructions(queryTableHeader + "|2|$V|\n");
     qt.setSymbol("V", "4");
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list("queryTable_id_0", "OK"),
-        list("queryTable_id_1", VoidConverter.VOID_TAG),
-        list("queryTable_id_2",
-          list(
-            list(list("n", "2"), list("2n", "4"))
-          )
-        )
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list("queryTable_id_0", "OK"),
+                    list("queryTable_id_1", VoidConverter.VOID_TAG),
+                    list("queryTable_id_2",
+                            list(
+                                    list(list("n", "2"), list("2n", "4"))
+                            )
+                    )
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
     org.junit.Assert.assertEquals(
       "[" +
         headRow +
@@ -276,18 +284,18 @@ public abstract class QueryTableBaseTest {
   public void variablesAreReplacedInExpected() throws Exception {
     makeQueryTableAndBuildInstructions(queryTableHeader + "|2|$V|\n");
     qt.setSymbol("V", "5");
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list("queryTable_id_0", "OK"),
-        list("queryTable_id_1", VoidConverter.VOID_TAG),
-        list("queryTable_id_2",
-          list(
-            list(list("n", "2"), list("2n", "4"))
-          )
-        )
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list("queryTable_id_0", "OK"),
+                    list("queryTable_id_1", VoidConverter.VOID_TAG),
+                    list("queryTable_id_2",
+                            list(
+                                    list(list("n", "2"), list("2n", "4"))
+                            )
+                    )
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
     org.junit.Assert.assertEquals(
       "[" +
         headRow +
@@ -302,17 +310,17 @@ public abstract class QueryTableBaseTest {
   public void variablesAreReplacedInMissing() throws Exception {
     makeQueryTableAndBuildInstructions(queryTableHeader + "|3|$V|\n");
     qt.setSymbol("V", "5");
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list("queryTable_id_0", "OK"),
-        list("queryTable_id_1", VoidConverter.VOID_TAG),
-        list("queryTable_id_2",
-          list(
-          )
-        )
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list("queryTable_id_0", "OK"),
+                    list("queryTable_id_1", VoidConverter.VOID_TAG),
+                    list("queryTable_id_2",
+                            list(
+                            )
+                    )
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
     org.junit.Assert.assertEquals(
       "[" +
         headRow +

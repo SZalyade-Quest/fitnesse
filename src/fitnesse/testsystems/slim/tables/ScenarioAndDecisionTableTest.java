@@ -2,40 +2,39 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.testsystems.slim.tables;
 
-import fitnesse.slim.SlimClient;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import fitnesse.testsystems.slim.SlimCommandRunningClient;
 import fitnesse.slim.instructions.CallInstruction;
 import fitnesse.slim.instructions.Instruction;
 import fitnesse.testsystems.slim.HtmlTableScanner;
 import fitnesse.testsystems.slim.SlimTestContextImpl;
 import fitnesse.testsystems.slim.Table;
 import fitnesse.testsystems.slim.TableScanner;
-import fitnesse.wiki.InMemoryPage;
 import fitnesse.wiki.WikiPage;
 import fitnesse.wiki.WikiPageUtil;
+import fitnesse.wiki.mem.InMemoryPage;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static util.ListUtility.list;
 
 public class ScenarioAndDecisionTableTest extends SlimTestContextImpl {
   private WikiPage root;
-  private List<Assertion> assertions;
-  private ScenarioTable st;
+  private List<SlimAssertion> assertions;
   private DecisionTable dt;
 
   private List<Instruction> instructions() {
-    return Assertion.getInstructions(assertions);
+    return SlimAssertion.getInstructions(assertions);
   }
 
   @Before
   public void setUp() throws Exception {
     root = InMemoryPage.makeRoot("root");
-    assertions = new ArrayList<Assertion>();
+    assertions = new ArrayList<SlimAssertion>();
     clearTestSummary();
   }
 
@@ -43,7 +42,7 @@ public class ScenarioAndDecisionTableTest extends SlimTestContextImpl {
     WikiPageUtil.setPageContents(root, tableText);
     TableScanner ts = new HtmlTableScanner(root.getData().getHtml());
     Table t = ts.getTable(0);
-    st = new ScenarioTable(t, "s_id", this);
+    ScenarioTable st = new ScenarioTable(t, "s_id", this);
     t = ts.getTable(1);
     dt = new DecisionTable(t, "did", this);
     assertions.addAll(st.getAssertions());
@@ -60,12 +59,12 @@ public class ScenarioAndDecisionTableTest extends SlimTestContextImpl {
         "|user|user_old|\n" +
         "|7|7|\n"
     );
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list("decisionTable_did_0/scriptTable_s_id_0", "7")
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list("decisionTable_did_0/scriptTable_s_id_0", "7")
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
 
     String scriptTable = dt.getChildren().get(0).getTable().toString();
     String expectedScript =
@@ -124,12 +123,12 @@ public class ScenarioAndDecisionTableTest extends SlimTestContextImpl {
         "|input|output|\n" +
         "|7|7|\n"
     );
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list("decisionTable_did_0/scriptTable_s_id_0", "7")
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list("decisionTable_did_0/scriptTable_s_id_0", "7")
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
 
     String scriptTable = dt.getChildren().get(0).getTable().toString();
     String expectedScript =
@@ -152,12 +151,12 @@ public class ScenarioAndDecisionTableTest extends SlimTestContextImpl {
         "|input|output|\n" +
         "|7|8|\n"
     );
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list("decisionTable_did_0/scriptTable_s_id_0", "7")
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list("decisionTable_did_0/scriptTable_s_id_0", "7")
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
 
     String scriptTable = dt.getChildren().get(0).getTable().toString();
     String expectedScript =
@@ -192,12 +191,12 @@ public class ScenarioAndDecisionTableTest extends SlimTestContextImpl {
         "|input|output|\n" +
         "|7|7|\n"
     );
-    Map<String, Object> pseudoResults = SlimClient.resultToMap(
-      list(
-        list("decisionTable_did_0/scriptTable_s_id_0", "7")
-      )
+    Map<String, Object> pseudoResults = SlimCommandRunningClient.resultToMap(
+            list(
+                    list("decisionTable_did_0/scriptTable_s_id_0", "7")
+            )
     );
-    Assertion.evaluateExpectations(assertions, pseudoResults);
+    SlimAssertion.evaluateExpectations(assertions, pseudoResults);
 
     String scriptTable = dt.getChildren().get(0).getTable().toString();
     String expectedScript =

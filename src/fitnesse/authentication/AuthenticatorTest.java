@@ -2,7 +2,8 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.authentication;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+
 import fitnesse.FitNesseContext;
 import fitnesse.Responder;
 import fitnesse.http.MockRequest;
@@ -10,15 +11,15 @@ import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.testutil.FitNesseUtil;
 import fitnesse.testutil.SimpleAuthenticator;
-import fitnesse.wiki.InMemoryPage;
+import fitnesse.wiki.mem.InMemoryPage;
 import fitnesse.wiki.PageData;
 import fitnesse.wiki.WikiPage;
+import org.junit.Before;
+import org.junit.Test;
 
-public class AuthenticatorTest extends TestCase {
+public class AuthenticatorTest {
   SimpleAuthenticator authenticator;
-  private WikiPage root;
   private MockRequest request;
-  private Responder responder;
   private Class<? extends Responder> responderType;
   private DummySecureResponder privilegedResponder;
   private FitNesseContext context;
@@ -37,9 +38,9 @@ public class AuthenticatorTest extends TestCase {
     }
   }
   
-
+  @Before
   public void setUp() {
-    root = InMemoryPage.makeRoot("RooT");
+    WikiPage root = InMemoryPage.makeRoot("RooT");
     WikiPage frontpage = root.addChildPage("FrontPage");
     makeReadSecure(frontpage);
     authenticator = new SimpleAuthenticator();
@@ -56,14 +57,13 @@ public class AuthenticatorTest extends TestCase {
     frontpage.commit(data);
   }
 
-  public void tearDown() {
-  }
-
+  @Test
   public void testNotAuthenticated() {
     makeResponder();
     assertEquals(UnauthorizedResponder.class, responderType);
   }
 
+  @Test
   public void testAuthenticated() {
     authenticator.authenticated = true;
     makeResponder();
@@ -71,7 +71,7 @@ public class AuthenticatorTest extends TestCase {
   }
 
   private void makeResponder() {
-    responder = authenticator.authenticate(context, request, privilegedResponder);
+    Responder responder = authenticator.authenticate(context, request, privilegedResponder);
     responderType = responder.getClass();
   }
 }

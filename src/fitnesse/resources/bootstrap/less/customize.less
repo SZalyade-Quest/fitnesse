@@ -32,6 +32,7 @@ label {
 
 .breadcrumb {
   padding: 8px 40px;
+  margin: 0;
   #gradient > .vertical-three-colors(#ffffff, #ffffff, 70%, rgba(255,255,255,0.0));
   background-color: transparent;
   .border-radius(0);
@@ -65,7 +66,6 @@ input[type="checkbox"] {
   *width: 100%;
   height: auto;
   margin: 0;
-  overflow: ;
   background-color: transparent;
   border-bottom: none;
   border-top: 1px solid #e5e5e5;
@@ -90,7 +90,7 @@ input[type="checkbox"] {
   background: transparent;
   margin: 5px 0px 5px 0px;
   border: 1px solid #e5e5e5;
-  padding: 9.5px;
+  padding: 4px;
   .border-radius(4px);
 }
 
@@ -142,24 +142,32 @@ tr.scenario.closed > td:first-child {
   padding-left: 18px;
 }
 
-.pass {
+.pass,
+span.pass * {
   background-color: darken(@successBackground, 10%);
   color: darken(@successText, 30%);
 }
-.fail {
+.fail,
+span.fail * {
   background-color: darken(@errorBackground, 15%);
   color: darken(@errorText, 30%);
 }
 .error {
-  padding: 8px 35px 8px 14px;
-  margin-bottom: @baseLineHeight;
   background-color: darken(@warningBackground, 10%);
-  border: 1px solid darken(@warningBorder, 30%);
-  .border-radius(4px);
   color: darken(@warningText, 30%);
 }
-
-
+span.error,
+span.error *{
+  background-position: 0, -2px;
+  padding-right: 3px;
+  border: 1px solid darken(@warningBorder, 30%);
+  .border-radius(4px);
+}
+.ignore,
+span.ignore * {
+  background-color: darken(@infoBackground, 10%);
+  color: darken(@infoText, 30%);
+}
 #test-action {
   .test-button(@bgColor) {
     .label;
@@ -305,6 +313,16 @@ tr.scenario.closed > td:first-child {
 .editPage #helptext {
     margin-bottom: 0.5em;
     .input-xxlarge;
+}
+
+.tagsinput .tag {
+    .badge;
+    background-color: @infoText;
+    border: none;
+}
+
+.tagsinput .tag a {
+    color: @errorText;
 }
 
 body.editing {

@@ -2,19 +2,19 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.testsystems.slim.tables;
 
-import static org.junit.Assert.assertEquals;
-import static util.ListUtility.list;
-
 import java.util.List;
 
 import fitnesse.slim.instructions.ImportInstruction;
 import fitnesse.slim.instructions.Instruction;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static util.ListUtility.list;
+
 public class ImportTableTest extends SlimTableTestSupport<ImportTable> {
-  private final String importTableHeader = "|Import|\n";
 
   private void buildInstructionsFor(String scriptStatements) throws Exception {
+    String importTableHeader = "|Import|\n";
     makeSlimTableAndBuildInstructions(importTableHeader + scriptStatements);
   }
 

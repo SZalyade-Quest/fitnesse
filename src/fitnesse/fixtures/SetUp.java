@@ -3,7 +3,6 @@
 package fitnesse.fixtures;
 
 import static fitnesse.fixtures.FitnesseFixtureContext.context;
-import static fitnesse.fixtures.FitnesseFixtureContext.fitnesse;
 import static fitnesse.fixtures.FitnesseFixtureContext.root;
 
 import java.io.File;
@@ -12,10 +11,10 @@ import util.FileUtil;
 import fit.Fixture;
 import fitnesse.FitNesse;
 import fitnesse.authentication.Authenticator;
-import fitnesse.components.SaveRecorder;
+import fitnesse.responders.editing.SaveRecorder;
 import fitnesse.responders.WikiImportTestEventListener;
 import fitnesse.testutil.FitNesseUtil;
-import fitnesse.wiki.InMemoryPage;
+import fitnesse.wiki.mem.InMemoryPage;
 
 public class SetUp extends Fixture {
   public SetUp() throws Exception {
@@ -31,12 +30,12 @@ public class SetUp extends Fixture {
         return true;
       }
     });
-    fitnesse = new FitNesse(context, false);
+    context.fitNesse.dontMakeDirs();
     File historyDirectory = context.getTestHistoryDirectory();
     if (historyDirectory.exists())
       FileUtil.deleteFileSystemDirectory(historyDirectory);
     historyDirectory.mkdirs();
     SaveRecorder.clear();
-    fitnesse.start();
+    context.fitNesse.start();
   }
 }

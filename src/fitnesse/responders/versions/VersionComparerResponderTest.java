@@ -1,30 +1,22 @@
 package fitnesse.responders.versions;
 
 import static org.junit.Assert.assertEquals;
-
-import org.junit.Before;
-import org.junit.Test;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static util.RegexTestCase.assertHasRegexp;
 
 import fitnesse.FitNesseContext;
 import fitnesse.http.MockRequest;
 import fitnesse.http.SimpleResponse;
 import fitnesse.testutil.FitNesseUtil;
-import fitnesse.wiki.InMemoryPage;
-import fitnesse.wiki.PageData;
-import fitnesse.wiki.PathParser;
-import fitnesse.wiki.WikiPage;
-import fitnesse.wiki.WikiPageProperties;
+import fitnesse.wiki.*;
+import fitnesse.wiki.mem.InMemoryPage;
+import org.junit.Before;
+import org.junit.Test;
 
 public class VersionComparerResponderTest {
   private String firstVersion;
   private String secondVersion;
   private SimpleResponse response;
-  private WikiPage root;
-  private WikiPage page;
   private VersionComparerResponder responder;
   private MockRequest request;
   private FitNesseContext context;
@@ -32,20 +24,19 @@ public class VersionComparerResponderTest {
   
   @Before
   public void setUp() throws Exception {
-    root = InMemoryPage.makeRoot("RooT");
+    WikiPage root = InMemoryPage.makeRoot("RooT");
     context = FitNesseUtil.makeTestContext(root);
-    page = root.getPageCrawler().addPage(root, PathParser.parse("ComparedPage"), "original content");
+    WikiPage page = WikiPageUtil.addPage(root, PathParser.parse("ComparedPage"), "original content");
     PageData data = page.getData();
-    
+    firstVersion = page.commit(data).getName();
+
     WikiPageProperties properties = data.getProperties();
     properties.set(PageData.PropertySUITES, "New Page tags");
-    data = page.getData();
     data.setContent("new stuff");
-    firstVersion = page.commit(data).getName();
-    
-    data = page.getData();
-    data.setContent("even newer stuff");
     secondVersion = page.commit(data).getName();
+    
+    data.setContent("even newer stuff");
+    page.commit(data);
 
     request = new MockRequest();
     request.setResource("ComparedPage");

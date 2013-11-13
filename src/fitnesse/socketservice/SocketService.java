@@ -10,16 +10,16 @@ import java.net.SocketException;
 import java.util.LinkedList;
 
 public class SocketService {
-  private ServerSocket serverSocket = null;
-  private Thread serviceThread = null;
+  private final ServerSocket serverSocket;
+  private final Thread serviceThread;
   private volatile boolean running = false;
-  private SocketServer server = null;
-  private LinkedList<Thread> threads = new LinkedList<Thread>();
+  private final SocketServer server;
+  private final LinkedList<Thread> threads = new LinkedList<Thread>();
   private volatile boolean everRan = false;
 
   public SocketService(int port, SocketServer server) throws IOException {
     this.server = server;
-    serverSocket = tryCreateServerSocket(port);
+    serverSocket = SocketFactory.tryCreateServerSocket(port);
     serviceThread = new Thread(
       new Runnable() {
         public void run() {
@@ -30,17 +30,7 @@ public class SocketService {
     serviceThread.start();
   }
 
-  private ServerSocket tryCreateServerSocket(int port) throws IOException {
-    ServerSocket socket;
-    try {
-      socket = new ServerSocket(port);
-    } catch (BindException e) {
-      System.out.println("Bind exception on port = " + port);
-      throw e;
-    }
-    return socket;
-  }
-
+  
   public void close() throws IOException {
     waitForServiceThreadToStart();
     running = false;
@@ -55,7 +45,7 @@ public class SocketService {
 
   private void waitForServiceThreadToStart() {
     if (everRan) return;
-    while (running == false) Thread.yield();
+    while (!running) Thread.yield();
   }
 
   private void serviceThread() {

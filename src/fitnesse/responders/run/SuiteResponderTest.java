@@ -2,14 +2,28 @@
 // Released under the terms of the CPL Common Public License version 1.0.
 package fitnesse.responders.run;
 
+import static fitnesse.responders.run.TestResponderTest.XmlTestUtilities.assertCounts;
+import static fitnesse.responders.run.TestResponderTest.XmlTestUtilities.getXmlDocumentFromResults;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static util.RegexTestCase.*;
+
+import java.io.File;
+import java.io.FileInputStream;
+
 import fitnesse.FitNesseContext;
 import fitnesse.http.MockRequest;
 import fitnesse.http.MockResponseSender;
 import fitnesse.http.Response;
 import fitnesse.testsystems.TestSummary;
 import fitnesse.testsystems.fit.FitSocketReceiver;
+import fitnesse.testsystems.fit.FitTestSystem;
+import fitnesse.testsystems.fit.SocketDealer;
 import fitnesse.testutil.FitNesseUtil;
 import fitnesse.wiki.*;
+import fitnesse.wiki.mem.InMemoryPage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,16 +35,6 @@ import util.DateAlteringClock;
 import util.DateTimeUtil;
 import util.XmlUtil;
 
-import java.io.File;
-import java.io.FileInputStream;
-
-import static fitnesse.responders.run.TestResponderTest.XmlTestUtilities.assertCounts;
-import static fitnesse.responders.run.TestResponderTest.XmlTestUtilities.getXmlDocumentFromResults;
-import static junit.framework.Assert.fail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static util.RegexTestCase.*;
-
 public class SuiteResponderTest {
   private static final String TEST_TIME = "12/5/2008 01:19:00";
   private MockRequest request;
@@ -39,8 +43,6 @@ public class SuiteResponderTest {
   private WikiPage suite;
   private FitNesseContext context;
   private FitSocketReceiver receiver;
-  private PageCrawler crawler;
-  private String suitePageName;
   private final String fitPassFixture = "|!-fitnesse.testutil.PassFixture-!|\n";
   private final String fitFailFixture = "|!-fitnesse.testutil.FailFixture-!|\n";
   private final String simpleSlimDecisionTable = "!define TEST_SYSTEM {slim}\n" +
@@ -50,24 +52,22 @@ public class SuiteResponderTest {
 
   @Before
   public void setUp() throws Exception {
-    suitePageName = "SuitePage";
+    String suitePageName = "SuitePage";
     root = InMemoryPage.makeRoot("RooT");
-    crawler = root.getPageCrawler();
     PageData data = root.getData();
     data.setContent(classpathWidgets());
     root.commit(data);
-    suite = crawler.addPage(root, PathParser.parse(suitePageName), "This is the test suite\n");
+    suite = WikiPageUtil.addPage(root, PathParser.parse(suitePageName), "This is the test suite\n");
     addTestToSuite("TestOne", fitPassFixture);
 
     request = new MockRequest();
     request.setResource(suitePageName);
     responder = new SuiteResponder();
-    responder.turnOffChunking();
     responder.setFastTest(true);
     responder.page = suite;
     context = FitNesseUtil.makeTestContext(root);
 
-    receiver = new FitSocketReceiver(0, context.socketDealer);
+    receiver = new FitSocketReceiver(0, FitTestSystem.socketDealer());
     new DateAlteringClock(DateTimeUtil.getDateFromString(TEST_TIME)).freeze();
   }
 
@@ -81,7 +81,7 @@ public class SuiteResponderTest {
   }
 
   private WikiPage addTestPage(WikiPage page, String name, String content) throws Exception {
-    WikiPage testPage = crawler.addPage(page, PathParser.parse(name), content);
+    WikiPage testPage = WikiPageUtil.addPage(page, PathParser.parse(name), content);
     PageData data = testPage.getData();
     data.setAttribute("Test");
     testPage.commit(data);
@@ -165,13 +165,13 @@ public class SuiteResponderTest {
 
   @Test
   public void testSuiteWithEmptyPage() throws Exception {
-    suite = crawler.addPage(root, PathParser.parse("SuiteWithEmptyPage"), "This is the empty page test suite\n");
+    suite = WikiPageUtil.addPage(root, PathParser.parse("SuiteWithEmptyPage"), "This is the empty page test suite\n");
     addTestPage(suite, "TestThatIsEmpty", "");
     request.setResource("SuiteWithEmptyPage");
     runSuite();
 
     WikiPagePath errorLogPath = PathParser.parse("ErrorLogs.SuiteWithEmptyPage");
-    WikiPage errorLog = crawler.getPage(root, errorLogPath);
+    WikiPage errorLog = root.getPageCrawler().getPage(errorLogPath);
     PageData data = errorLog.getData();
     String errorLogContent = data.getContent();
     assertNotSubString("Exception", errorLogContent);
@@ -203,6 +203,12 @@ public class SuiteResponderTest {
     assertSubString("Exit-Code: 1", results);
   }
 
+  @Test
+  public void testNoExitCodeHeaderIfNotChunked() throws Exception {
+    responder.turnOffChunking();
+    String results = runSuite();
+    assertFalse(results.contains("Exit-Code: 0"));
+  }
 
   @Test
   public void testExecutionStatusAppears() throws Exception {
@@ -335,6 +341,7 @@ public class SuiteResponderTest {
 
   @Test
   public void xmlFormat() throws Exception {
+    responder.turnOffChunking();
     request.addInput("format", "xml");
     addTestToSuite("SlimTest", simpleSlimDecisionTable);
     String results = runSuite();

@@ -5,6 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
 
+import fitnesse.reporting.history.MostRecentPageHistoryReader;
+import fitnesse.reporting.history.TestHistory;
+import fitnesse.reporting.TestResultRecord;
 import fitnesse.wiki.WikiPage;
 import util.GracefulNamer;
 
@@ -12,12 +15,8 @@ public class SuiteOverviewTree {
 
   private TreeItem treeRoot = new TreeItem("root", "");
 
-  SuiteOverviewTree(List<String> aPagelist, String anotherone) {
-    makeTree(aPagelist);
-  }
-
   public SuiteOverviewTree(List<WikiPage> wikiPagelist) {
-    this(convertToPageList(wikiPagelist), null);
+    makeTree(convertToPageList(wikiPagelist));
   }
   
   private void makeTree(List<String> pageList) {
@@ -38,7 +37,7 @@ public class SuiteOverviewTree {
     
     for (WikiPage aPage : wikiPagelist)  {
       try {
-        allPages.add(aPage.getPageCrawler().getFullPath(aPage).toString());
+        allPages.add(aPage.getPageCrawler().getFullPath().toString());
       } catch (Exception e) {
         allPages.add("There was also a probem getting the path of one page.");
       }

@@ -10,11 +10,11 @@ import fitnesse.authentication.SecureResponder;
 import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
-import fitnesse.responders.templateUtilities.HtmlPage;
-import fitnesse.responders.templateUtilities.PageTitle;
+import fitnesse.html.template.HtmlPage;
+import fitnesse.html.template.PageTitle;
 
 public class ShutdownResponder implements SecureResponder {
-  public Response makeResponse(FitNesseContext context, Request request) {
+  public Response makeResponse(final FitNesseContext context, Request request) {
     SimpleResponse response = new SimpleResponse();
 
     HtmlPage html = context.pageFactory.newPage();
@@ -27,7 +27,7 @@ public class ShutdownResponder implements SecureResponder {
     Thread shutdownThread = new Thread() {
       public void run() {
         try {
-          FitNesse.FITNESSE_INSTANCE.stop();
+          context.fitNesse.stop();
         }
         catch (Exception e) {
           e.printStackTrace();

@@ -18,11 +18,12 @@ import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import fitnesse.socketservice.SocketFactory;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import util.FileUtil;
-import util.RegexTestCase;
 import util.StreamReader;
 
 public class FitServerTest {
@@ -207,7 +208,7 @@ public class FitServerTest {
   }
 
   private void establishConnection() throws Exception {
-    serverSocket = new ServerSocket(PORT_NUMBER);
+    serverSocket = SocketFactory.tryCreateServerSocket(PORT_NUMBER);
     socket = null;
 
     listenForConnectionSocket();
@@ -304,7 +305,7 @@ public class FitServerTest {
   }
 
   private void checkSize(String sizeString) throws Exception {
-    RegexTestCase.assertEquals(sizeString, read(10));
+    assertEquals(sizeString, read(10));
   }
 
   private void checkForTwoClassAttributesInResponse() throws Exception {

@@ -8,16 +8,17 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 
-import fitnesse.ComponentFactory;
+import fitnesse.components.ComponentFactory;
 import fitnesse.FitNesseContext;
 import fitnesse.FitNesseContext.Builder;
-import fitnesse.WikiPageFactory;
 import fitnesse.authentication.PromiscuousAuthenticator;
-import fitnesse.responders.run.SuiteContentsFinder;
+import fitnesse.testrunner.SuiteContentsFinder;
 import fitnesse.wiki.PageCrawler;
 import fitnesse.wiki.PathParser;
 import fitnesse.wiki.WikiPage;
+import fitnesse.wiki.WikiPageFactory;
 import fitnesse.wiki.WikiPagePath;
+import fitnesse.wiki.fs.FileSystemPageFactory;
 import junit.framework.AssertionFailedError;
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
@@ -141,16 +142,16 @@ public class FitNesseSuite extends ParentRunner<String> {
   private List<String> initChildren(FitNesseContext context) {
     WikiPagePath path = PathParser.parse(this.suiteName);
     PageCrawler crawler = context.root.getPageCrawler();
-    WikiPage suiteRoot = crawler.getPage(context.root, path);
+    WikiPage suiteRoot = crawler.getPage(path);
     if (!suiteRoot.getData().hasAttribute("Suite")) {
       throw new IllegalArgumentException("page " + this.suiteName + " is not a suite");
     }
-    WikiPage root = crawler.getPage(context.root, PathParser.parse("."));
-    List<WikiPage> pages = new SuiteContentsFinder(suiteRoot, null, root).getAllPagesToRunForThisSuite();
+    WikiPage root = crawler.getPage(PathParser.parse("."));
+    List<WikiPage> pages = new SuiteContentsFinder(suiteRoot, new fitnesse.testrunner.SuiteFilter(suiteFilter, excludeSuiteFilter), root).getAllPagesToRunForThisSuite();
 
     List<String> testPages = new ArrayList<String>();
     for (WikiPage wp : pages) {
-      testPages.add(crawler.getFullPath(wp).toString());
+      testPages.add(wp.getPageCrawler().getFullPath().toString());
     }
     return testPages;
   }
@@ -282,19 +283,14 @@ public class FitNesseSuite extends ParentRunner<String> {
 
   private static FitNesseContext initContext(String rootPath, int port) throws Exception {
     Builder builder = new Builder();
-    WikiPageFactory wikiPageFactory = new WikiPageFactory();
-    ComponentFactory componentFactory = new ComponentFactory(rootPath);
+    WikiPageFactory wikiPageFactory = new FileSystemPageFactory();
 
     builder.port = port;
     builder.rootPath = rootPath;
     builder.rootDirectoryName = "FitNesseRoot";
 
-    builder.pageTheme = componentFactory.getProperty(ComponentFactory.THEME);
-    builder.defaultNewPageContent = componentFactory
-            .getProperty(ComponentFactory.DEFAULT_NEWPAGE_CONTENT);
-
     builder.root = wikiPageFactory.makeRootPage(builder.rootPath,
-            builder.rootDirectoryName, componentFactory);
+        builder.rootDirectoryName);
 
     builder.logger = null;
     builder.authenticator = new PromiscuousAuthenticator();

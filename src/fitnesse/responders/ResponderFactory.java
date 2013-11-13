@@ -41,7 +41,6 @@ import fitnesse.responders.versions.RollbackResponder;
 import fitnesse.responders.versions.VersionComparerResponder;
 import fitnesse.responders.versions.VersionResponder;
 import fitnesse.responders.versions.VersionSelectionResponder;
-import fitnesse.wiki.WikiPage;
 import fitnesse.wikitext.parser.WikiWordPath;
 
 public class ResponderFactory {
@@ -101,11 +100,11 @@ public class ResponderFactory {
     addResponder("compareVersions", VersionComparerResponder.class);
   }
 
-  public void addResponder(String key, String responderClassName) throws ClassNotFoundException {
-    responderMap.put(key, Class.forName(responderClassName));
+  public final void addResponder(String key, String responderClassName) throws ClassNotFoundException {
+    addResponder(key, Class.forName(responderClassName));
   }
 
-  public void addResponder(String key, Class<?> responderClass) {
+  public final void addResponder(String key, Class<?> responderClass) {
     responderMap.put(key, responderClass);
   }
 
@@ -123,22 +122,22 @@ public class ResponderFactory {
     return (argStart <= 0) ? fullQuery : fullQuery.substring(0, argStart);
   }
 
-  public Responder makeResponder(Request request, WikiPage root) throws InstantiationException {
-    Responder responder = new DefaultResponder();
+  public Responder makeResponder(Request request) throws InstantiationException {
     String resource = request.getResource();
     String responderKey = getResponderKey(request);
+
+    Responder responder;
+
     if (usingResponderKey(responderKey))
       responder = lookupResponder(responderKey);
-    else {
-      if (StringUtil.isBlank(resource))
-        responder = new WikiPageResponder();
-      else if (resource.startsWith("files/") || resource.equals("files"))
-        responder = FileResponder.makeResponder(request, rootPath);
-      else if (WikiWordPath.isWikiWord(resource) || "root".equals(resource))
-        responder = new WikiPageResponder();
-      else
-        responder = new NotFoundResponder();
-    }
+    else if (StringUtil.isBlank(resource))
+      responder = new WikiPageResponder();
+    else if (resource.startsWith("files/") || resource.equals("files"))
+      responder = FileResponder.makeResponder(request, rootPath);
+    else if (WikiWordPath.isWikiWord(resource) || "root".equals(resource))
+      responder = new WikiPageResponder();
+    else
+      responder = new NotFoundResponder();
 
     return responder;
   }

@@ -1,12 +1,14 @@
 package fitnesse.wiki;
 
+import java.util.Collections;
+import java.util.Map;
+
+import fitnesse.responders.editing.TemplateUtil;
 
 // Work in progress, WikiPage, versions, directory should each have specific actions instances.
 public class WikiPageActions {
 
   private WikiPage page;
-  private boolean addChild; // normal wiki page
-  private boolean pageHistory; // test results
 
   public WikiPageActions(WikiPage page) {
     super();
@@ -29,6 +31,12 @@ public class WikiPageActions {
     return hasAction("Edit");
   }
 
+  public Map<String, String> getNewPageTemplates() {
+    if (isWithEdit()) {
+      return TemplateUtil.getTemplatePageMap(page);
+    }
+    return Collections.emptyMap();
+  }
   public boolean isWithProperties() {
     return hasAction("Properties");
   }
@@ -50,7 +58,7 @@ public class WikiPageActions {
   }
 
   public boolean isWithVersions() {
-    return hasAction("Versions") && PageVersionPruner.daysTillVersionsExpire > 0;
+    return hasAction("Versions");
   }
 
   public boolean isWithRecentChanges() {
@@ -71,10 +79,6 @@ public class WikiPageActions {
     return data != null && data.hasAttribute(action);
   }
 
-  private boolean isTestablePage() {
-    return hasAction("Test") || hasAction("Suite");
-  }
-
   private PageData getData() {
     if (page != null) {
       try {
@@ -88,25 +92,9 @@ public class WikiPageActions {
 
   public String getLocalPageName() {
     if (page != null) {
-      WikiPagePath localPagePath = page.getPageCrawler().getFullPath(page);
+      WikiPagePath localPagePath = page.getPageCrawler().getFullPath();
       return PathParser.render(localPagePath);
     }
     return null;
-  }
-
-  public String getLocalOrRemotePageName() {
-    String localOrRemotePageName = getLocalPageName();
-
-    if (page instanceof ProxyPage) {
-      localOrRemotePageName = ((ProxyPage) page).getThisPageUrl();
-    }
-    return localOrRemotePageName;
-  }
-
-  public boolean isNewWindowIfRemote() {
-    if (page != null) {
-      return page.isOpenInNewWindow();
-    }
-    return false;
   }
 }
