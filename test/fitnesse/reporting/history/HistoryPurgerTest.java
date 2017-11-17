@@ -2,6 +2,7 @@ package fitnesse.reporting.history;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -29,7 +30,7 @@ public class HistoryPurgerTest {
     removeResultsDirectory();
     resultsDirectory.mkdir();
 
-    new DateAlteringClock(makeDate("20090616000000")).freeze();
+    new DateAlteringClock(makeDate("20090616000000000")).freeze();
     historyPurger = new HistoryPurger(resultsDirectory, 1);
   }
 
@@ -152,7 +153,8 @@ public class HistoryPurgerTest {
   }
 
   private Date makeDate(String dateString) throws ParseException {
-    SimpleDateFormat format = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+    //SimpleDateFormat format = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+    DateFormat format = new PageHistoryDateFormat();
     Date date = format.parse(dateString);
     return date;
   }

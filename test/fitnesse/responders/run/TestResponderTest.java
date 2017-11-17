@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +54,10 @@ import static util.RegexTestCase.assertSubString;
 import static util.RegexTestCase.divWithIdAndContent;
 
 public class TestResponderTest {
-  private static final String TEST_TIME = "12/5/2008 01:19:00";
+  //private static final String TEST_TIME = "12/5/2008 01:19:00";
+  private static final String TEST_TIME = "2008-12-05T01:19:00.123";
+  DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+
   private WikiPage root;
   private MockRequest request;
   private SuiteResponder responder;
@@ -76,7 +81,7 @@ public class TestResponderTest {
     request = new MockRequest();
     responder = new TestResponder();
     properties.setProperty("FITNESSE_PORT", String.valueOf(context.port));
-    new DateAlteringClock(DateTimeUtil.getDateFromString(TEST_TIME)).advanceMillisOnEachQuery();
+    new DateAlteringClock(dateFormat.parse(TEST_TIME)).freeze();// .advanceMillisOnEachQuery();
   }
 
   @After
@@ -276,6 +281,7 @@ public class TestResponderTest {
 
   @Test
   public void simpleXmlFormat() throws Exception {
+    new DateAlteringClock(dateFormat.parse(TEST_TIME)).advanceMillisOnEachQuery();
     responder.turnOffChunking();
     request.addInput("format", "xml");
     doSimpleRun(passFixtureTable());
@@ -320,7 +326,7 @@ public class TestResponderTest {
 
 
   private void ensureXmlResultFileDoesNotExist(TestSummary counts) throws IOException {
-    String resultsFileName = String.format("%s/TestPage/20081205011900_%d_%d_%d_%d.xml",
+    String resultsFileName = String.format("%s/TestPage/20081205011900123_%d_%d_%d_%d.xml",
       context.getTestHistoryDirectory(), counts.getRight(), counts.getWrong(), counts.getIgnores(), counts.getExceptions());
     xmlResultsFile = new File(resultsFileName);
 
@@ -339,6 +345,7 @@ public class TestResponderTest {
 
   @Test
   public void slimScenarioXmlFormat() throws Exception {
+    new DateAlteringClock(dateFormat.parse(TEST_TIME)).advanceMillisOnEachQuery();
     responder.turnOffChunking();
     request.addInput("format", "xml");
     doSimpleRun(XmlChecker.SLIM_SCENARIO_TABLE);

@@ -11,6 +11,7 @@ import org.apache.commons.lang.time.DateUtils;
 public class DateTimeUtil {
   private static final String DATE_FORMAT = "MM/dd/yyyy HH:mm:ss";
   private static final String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZZ";
+  private static final String ISO_DATE_MILLIS_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 
   public static long getTimeFromString(String time) throws ParseException {
     return getDateFromString(time).getTime();
@@ -22,6 +23,10 @@ public class DateTimeUtil {
 
   public static String formatDate(Date date) {
     return DateFormatUtils.format(date, ISO_DATE_FORMAT, TimeZone.getDefault(), Locale.US);
+  }
+
+  public static String formatISODate(Date date) {
+    return DateFormatUtils.format(date, ISO_DATE_MILLIS_FORMAT, TimeZone.getDefault(), Locale.US);
   }
 
   public static boolean datesNullOrEqual(Date d1, Date d2) {

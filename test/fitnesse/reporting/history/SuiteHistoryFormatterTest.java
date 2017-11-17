@@ -108,8 +108,9 @@ public class SuiteHistoryFormatterTest {
     for (int referenceIndex = 0; referenceIndex < xmlPageReferences.getLength(); referenceIndex++) {
       Element pageHistoryReferenceElement = (Element) xmlPageReferences.item(referenceIndex);
       assertEquals("SuitePage.TestPage", XmlUtil.getTextValue(pageHistoryReferenceElement, "name"));
-      assertEquals(DateTimeUtil.formatDate(testTime), XmlUtil.getTextValue(pageHistoryReferenceElement, "date"));
-      String link = "SuitePage.TestPage?pageHistory&resultDate=19521205011900";
+
+      assertEquals(DateTimeUtil.formatISODate(testTime), XmlUtil.getTextValue(pageHistoryReferenceElement, "date"));
+      String link = "SuitePage.TestPage?pageHistory&resultDate=19521205011900000";
       assertEquals(link, XmlUtil.getTextValue(pageHistoryReferenceElement, "pageHistoryLink"));
       Element countsElement = XmlUtil.getElementByTagName(pageHistoryReferenceElement, "counts");
       assertEquals("1", XmlUtil.getTextValue(countsElement, "right"));

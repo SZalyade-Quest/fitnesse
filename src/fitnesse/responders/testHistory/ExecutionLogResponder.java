@@ -3,6 +3,7 @@ package fitnesse.responders.testHistory;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.Date;
 
 import fitnesse.FitNesseContext;
@@ -19,12 +20,14 @@ import fitnesse.reporting.history.PageHistory;
 import fitnesse.reporting.history.TestExecutionReport;
 import fitnesse.reporting.history.TestHistory;
 import fitnesse.reporting.history.TestResultRecord;
+import fitnesse.reporting.history.PageHistoryDateFormat;
 import fitnesse.responders.ErrorResponder;
 import fitnesse.wiki.PathParser;
 import util.FileUtil;
 
 public class ExecutionLogResponder implements SecureResponder {
-  private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  //private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  private DateFormat dateFormat = new PageHistoryDateFormat();
   private File resultsDirectory;
   private FitNesseContext context;
 
@@ -40,7 +43,7 @@ public class ExecutionLogResponder implements SecureResponder {
       try {
         resultDate = dateFormat.parse(date);
       } catch (ParseException e) {
-        throw new IllegalArgumentException("Invalid date format provided: should be " + PageHistory.TEST_RESULT_FILE_DATE_PATTERN + ".", e);
+        throw new IllegalArgumentException("Invalid date format provided: should be " + PageHistoryDateFormat.TEST_RESULT_FILE_DATE_FORMAT_NEW + ".", e);
       }
     }
     TestResultRecord testResultRecord = pageHistory.get(resultDate);

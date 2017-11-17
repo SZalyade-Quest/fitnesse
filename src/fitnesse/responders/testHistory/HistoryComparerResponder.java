@@ -2,6 +2,7 @@ package fitnesse.responders.testHistory;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,6 +17,7 @@ import fitnesse.http.Request;
 import fitnesse.http.Response;
 import fitnesse.http.SimpleResponse;
 import fitnesse.reporting.history.PageHistory;
+import fitnesse.reporting.history.PageHistoryDateFormat;
 import fitnesse.responders.ErrorResponder;
 import fitnesse.wiki.PageCrawler;
 import fitnesse.wiki.PageData;
@@ -25,8 +27,10 @@ import fitnesse.wiki.WikiPagePath;
 
 public class HistoryComparerResponder implements Responder {
   public HistoryComparer comparer;
-  private SimpleDateFormat dateFormat = new SimpleDateFormat(
-      PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  //private SimpleDateFormat dateFormat = new SimpleDateFormat(
+  //    PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  private DateFormat dateFormat = new PageHistoryDateFormat();
+
   private String firstFileName = "";
   private String secondFileName = "";
   private String firstFilePath;

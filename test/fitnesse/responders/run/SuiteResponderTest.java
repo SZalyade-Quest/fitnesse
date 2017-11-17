@@ -446,7 +446,7 @@ public class SuiteResponderTest {
 
   private File expectedXmlResultsFile() {
     TestSummary counts = new TestSummary(3, 0, 0, 0);
-    String resultsFileName = String.format("%s/SuitePage/20081205011900_%d_%d_%d_%d.xml",
+    String resultsFileName = String.format("%s/SuitePage/20081205011900000_%d_%d_%d_%d.xml",
       context.getTestHistoryDirectory(), counts.getRight(), counts.getWrong(), counts.getIgnores(), counts.getExceptions());
     File xmlResultsFile = new File(resultsFileName);
     return xmlResultsFile;
@@ -455,7 +455,7 @@ public class SuiteResponderTest {
   @Test
   public void normalSuiteRunProducesIndivualTestHistoryFile() throws Exception {
     TestSummary counts = new TestSummary(1, 0, 0, 0);
-    String resultsFileName = String.format("%s/SuitePage.SlimTest/20081205011900_%d_%d_%d_%d.xml",
+    String resultsFileName = String.format("%s/SuitePage.SlimTest/20081205011900000_%d_%d_%d_%d.xml",
       context.getTestHistoryDirectory(), counts.getRight(), counts.getWrong(), counts.getIgnores(), counts.getExceptions());
     File xmlResultsFile = new File(resultsFileName);
 

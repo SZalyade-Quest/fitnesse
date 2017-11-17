@@ -2,6 +2,7 @@ package fitnesse.reporting.history;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -89,7 +90,8 @@ public class HistoryPurger {
   }
 
   private Date tryExtractDateFromTestHistoryName(String testHistoryName) throws ParseException {
-    SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+    //SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+    DateFormat dateFormat = new PageHistoryDateFormat();
     String dateString = testHistoryName.split("_")[0];
     return dateFormat.parse(dateString);
   }

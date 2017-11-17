@@ -4,7 +4,7 @@
 
 !|script|
 |get top level history|
-|the top level history line for|SuitePage.TestPage|should have a|fail|link with|-|to result|20090505000000|
+|the top level history line for|SuitePage.TestPage|should have a|fail|link with|-|to result|20090505000000000|
 
 
 

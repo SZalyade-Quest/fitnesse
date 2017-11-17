@@ -3,12 +3,11 @@ package fitnesse.responders.testHistory;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import fitnesse.reporting.history.PageHistory;
-import fitnesse.reporting.history.TestHistory;
-import fitnesse.reporting.history.TestResultRecord;
+import fitnesse.reporting.history.*;
 import org.apache.velocity.VelocityContext;
 
 import util.FileUtil;
@@ -21,16 +20,14 @@ import fitnesse.http.Response;
 import fitnesse.http.Response.Format;
 import fitnesse.http.SimpleResponse;
 import fitnesse.responders.ErrorResponder;
-import fitnesse.reporting.history.ExecutionReport;
-import fitnesse.reporting.history.SuiteExecutionReport;
-import fitnesse.reporting.history.TestExecutionReport;
 import fitnesse.html.template.HtmlPage;
 import fitnesse.html.template.PageTitle;
 import fitnesse.testsystems.ExecutionResult;
 import fitnesse.wiki.PathParser;
 
 public class PageHistoryResponder implements SecureResponder {
-  private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  //private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  private DateFormat dateFormat = new PageHistoryDateFormat();
   private SimpleResponse response;
   private PageHistory pageHistory;
   private HtmlPage page;

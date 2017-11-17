@@ -17,11 +17,11 @@
   </tr>
   #set($dates = $pageHistory.datesInChronologicalOrder())
   #foreach($date in $dates)
-    <tr id="pageHistoryRow_$pageHistory.formatDate("yyyyMMddHHmmss",$date)">
+    <tr id="pageHistoryRow_$pageHistory.formatResultDate($date)">
       <td><input type="checkbox" name="TestResult_$pageHistory.getPageFileName($date)"/></td>
       #set($bar = $pageHistory.getPassFailBar($date, 50))
       <td class="date_field#if($bar.Fail>0) fail#elseif($bar.Pass>0) pass#else ignore#end">
-      <a href="$pageHistory.FullPageName?pageHistory&amp;resultDate=$pageHistory.formatDate("yyyyMMddHHmmss",$date)">$pageHistory.formatDate("dd MMM, yy HH:mm", $date)</a>
+      <a href="$pageHistory.FullPageName?pageHistory&amp;resultDate=$pageHistory.formatResultDate($date)">$pageHistory.formatDate("dd MMM, yy HH:mm", $date)</a>
       </td>
       <td class="pass_count#if($bar.Pass==0) ignore#else pass#end">$bar.Pass</td>
       <td class="fail_count#if($bar.Fail==0) ignore#else fail#end">$bar.Fail</td>

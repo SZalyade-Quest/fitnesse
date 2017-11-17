@@ -15,6 +15,7 @@ import fitnesse.util.DateTimeUtil;
 import fitnesse.util.XmlUtil;
 
 import java.io.Writer;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -95,7 +96,9 @@ public class SuiteExecutionReport extends ExecutionReport {
       long time = 0;
       String dateString = XmlUtil.getTextValue(refElement, "date");
       try {
-        time = DateTimeUtil.getTimeFromString(dateString);
+        PageHistoryDateFormat format = new PageHistoryDateFormat();
+        time = format.parseISO8601(dateString).getTime();
+        //time = DateTimeUtil.getTimeFromString(dateString);
       } catch (ParseException e) {
         throw new InvalidReportException(format("'%s' is not a valid date", dateString), e);
       }
@@ -183,11 +186,15 @@ public class SuiteExecutionReport extends ExecutionReport {
     }
 
     public String getDateString() {
-      return DateTimeUtil.formatDate(new Date(time));
+      PageHistoryDateFormat pageHistoryFormatter = new PageHistoryDateFormat();
+      return pageHistoryFormatter.formatISO8601(new Date(time));
+      //return DateTimeUtil.formatDate(new Date(time));
     }
 
     public String getResultDate() {
-      SimpleDateFormat pageHistoryFormatter = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+      //SimpleDateFormat pageHistoryFormatter = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+      DateFormat pageHistoryFormatter = new PageHistoryDateFormat();
+
       return pageHistoryFormatter.format(new Date(time));
     }
 

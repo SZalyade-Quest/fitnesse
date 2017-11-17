@@ -3,6 +3,7 @@ package fitnesse.reporting.history;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.Date;
 
 import util.FileUtil;
@@ -11,8 +12,8 @@ import static java.lang.String.format;
 
 public class PageHistoryReader {
 
-  private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
-  public static final String TEST_FILE_FORMAT = "\\A\\d{14}_\\d+_\\d+_\\d+_\\d+(.xml)*\\Z";
+  //private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  private DateFormat dateFormat = new PageHistoryDateFormat();
 
   void readHistoryFromPageDirectory(File pageDirectory) {
     File[] resultDir = FileUtil.getDirectoryListing(pageDirectory);
@@ -29,7 +30,7 @@ public class PageHistoryReader {
   }
 
   public static boolean matchesPageHistoryFileFormat(String pageHistoryFileName) {
-    return pageHistoryFileName.matches(TEST_FILE_FORMAT);
+    return PageHistoryDateFormat.matchesFileFormat(pageHistoryFileName);
   }
 
   private void compileResultFileIntoHistory(File file) {

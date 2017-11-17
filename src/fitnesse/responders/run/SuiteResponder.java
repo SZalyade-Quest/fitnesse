@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -26,12 +27,7 @@ import fitnesse.reporting.Formatter;
 import fitnesse.reporting.InteractiveFormatter;
 import fitnesse.reporting.SuiteHtmlFormatter;
 import fitnesse.reporting.TestTextFormatter;
-import fitnesse.reporting.history.HistoryPurger;
-import fitnesse.reporting.history.JunitReFormatter;
-import fitnesse.reporting.history.PageHistory;
-import fitnesse.reporting.history.SuiteHistoryFormatter;
-import fitnesse.reporting.history.SuiteXmlReformatter;
-import fitnesse.reporting.history.TestXmlFormatter;
+import fitnesse.reporting.history.*;
 import fitnesse.responders.ChunkingResponder;
 import fitnesse.responders.WikiImporter;
 import fitnesse.responders.WikiImportingResponder;
@@ -437,7 +433,8 @@ public class SuiteResponder extends ChunkingResponder implements SecureResponder
   }
 
   public static String makeResultFileName(TestSummary summary, long time) {
-    SimpleDateFormat format = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+    //SimpleDateFormat format = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+    DateFormat format = new PageHistoryDateFormat();
     String datePart = format.format(new Date(time));
     return String.format("%s_%d_%d_%d_%d.xml", datePart, summary.getRight(), summary.getWrong(), summary.getIgnores(), summary.getExceptions());
   }

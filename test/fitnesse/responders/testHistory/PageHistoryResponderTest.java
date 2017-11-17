@@ -9,14 +9,14 @@ import static util.RegexTestCase.assertSubString;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 import java.util.SortedSet;
 
-import fitnesse.reporting.history.PageHistory;
-import fitnesse.reporting.history.TestHistory;
+import fitnesse.reporting.history.*;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.junit.After;
@@ -31,14 +31,13 @@ import fitnesse.FitNesseContext;
 import fitnesse.FitNesseVersion;
 import fitnesse.http.MockRequest;
 import fitnesse.http.SimpleResponse;
-import fitnesse.reporting.history.SuiteExecutionReport;
-import fitnesse.reporting.history.TestExecutionReport;
 import fitnesse.testsystems.TestSummary;
 import fitnesse.testutil.FitNesseUtil;
 
 public class PageHistoryResponderTest {
   private File resultsDirectory;
-  private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  //private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  private DateFormat dateFormat = new PageHistoryDateFormat();
   private PageHistoryResponder responder;
   private SimpleResponse response;
   private MockRequest request;

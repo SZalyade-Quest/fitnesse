@@ -10,12 +10,14 @@ import static util.RegexTestCase.assertHasRegexp;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
 import fitnesse.reporting.history.PageHistory;
+import fitnesse.reporting.history.PageHistoryDateFormat;
 import fitnesse.reporting.history.TestHistory;
 import fitnesse.reporting.history.TestResultRecord;
 import org.junit.After;
@@ -31,7 +33,8 @@ import util.FileUtil;
 
 public class TestHistoryResponderTest {
   private File resultsDirectory;
-  private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  //private SimpleDateFormat dateFormat = new SimpleDateFormat(PageHistory.TEST_RESULT_FILE_DATE_PATTERN);
+  DateFormat dateFormat = new PageHistoryDateFormat();
   private TestHistoryResponder responder;
   private SimpleResponse response;
   private FitNesseContext context;
@@ -274,6 +277,7 @@ public class TestHistoryResponderTest {
   @Test
   public void testHistoryFormatMatchesRegularExpression() throws Exception {
     assertTrue(PageHistory.matchesPageHistoryFileFormat("20090513134559_01_02_03_04.xml"));
+    assertTrue(PageHistory.matchesPageHistoryFileFormat("20090513134559333_01_02_03_04.xml"));
   }
 
   @Test

@@ -98,7 +98,9 @@ public abstract class ExecutionReport {
     String dateString = XmlUtil.getTextValue(documentElement, "date");
     if (dateString != null)
       try {
-        date = DateTimeUtil.getDateFromString(dateString);
+        PageHistoryDateFormat dateFormat = new PageHistoryDateFormat();
+        date = dateFormat.parseISO8601(dateString);
+        //date = DateTimeUtil.getDateFromString(dateString);
       } catch (ParseException e) {
         throw new InvalidReportException(format("'%s' is not a valid date.", dateString), e);
       }

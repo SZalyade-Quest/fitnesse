@@ -54,7 +54,9 @@ public class TestXmlFormatter extends BaseFormatter implements ExecutionLogListe
     resetTimer();
     appendHtmlToBuffer(WikiPageUtil.getHeaderPageHtml(getPage()));
     currentResult = newTestResult();
-    currentResult.dateString = DateTimeUtil.formatDate(new Date());
+    PageHistoryDateFormat pageHistoryFormatter = new PageHistoryDateFormat();
+    currentResult.dateString = pageHistoryFormatter.formatISO8601(new Date());
+    //currentResult.dateString = DateTimeUtil.formatDate(new Date());
     currentResult.relativePageName = testPage.getName();
     currentResult.tags = WikiTestPageUtil.getSourcePage(testPage).getData().getAttribute(PageData.PropertySUITES);
     testResponse.addResult(currentResult);

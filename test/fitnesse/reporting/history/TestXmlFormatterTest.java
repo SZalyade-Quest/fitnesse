@@ -55,7 +55,7 @@ public class TestXmlFormatterTest {
   public void makeFileName() throws Exception {
     TestSummary summary = new TestSummary(1, 2, 3, 4);
     assertEquals(
-            "20090413152143_1_2_3_4.xml",
+            "20090413152143000_1_2_3_4.xml",
             SuiteResponder.makeResultFileName(summary, clock.currentClockTimeInMillis()));
   }
 

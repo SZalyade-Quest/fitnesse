@@ -1,13 +1,13 @@
 package fitnesse.reporting.history;
 
 import java.io.File;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import fitnesse.testsystems.ExecutionResult;
 
 public class PageHistory extends PageHistoryReader{
-  public static final String TEST_RESULT_FILE_DATE_PATTERN = "yyyyMMddHHmmss";
 
   private int failures = 0;
   private int passes = 0;
@@ -61,12 +61,6 @@ public class PageHistory extends PageHistoryReader{
 
   private void addTestResult(TestResultRecord record, Date date) {
     testResultMap.put(date, record);
-  }
-
-  private Date trimMilliseconds(Date date) {
-    long milliseconds = date.getTime();
-    long seconds = milliseconds / 1000;
-    return new Date(seconds *1000);
   }
 
   public String getPageFileName(Date date){
@@ -123,7 +117,7 @@ public class PageHistory extends PageHistoryReader{
   }
 
   public TestResultRecord get(Date key) {
-    return testResultMap.get(trimMilliseconds(key));
+    return testResultMap.get(key);
   }
 
   public int maxAssertions() {
@@ -167,12 +161,18 @@ public class PageHistory extends PageHistoryReader{
     return fmt.format(date);
   }
 
+  public static String formatResultDate(Date date){
+    DateFormat dateFormat = new PageHistoryDateFormat();
+    return dateFormat.format(date);
+  }
+
   public static class PassFailReport {
     private String date;
     private ExecutionResult result;
 
     public PassFailReport(Date date, ExecutionResult result) {
-      SimpleDateFormat dateFormat = new SimpleDateFormat(TEST_RESULT_FILE_DATE_PATTERN);
+      //SimpleDateFormat dateFormat = new SimpleDateFormat(TEST_RESULT_FILE_DATE_PATTERN);
+      DateFormat dateFormat = new PageHistoryDateFormat();
       this.date = dateFormat.format(date);
       this.result = result;
     }
